@@ -16,7 +16,6 @@ Make an obfuscator.rb script:
 
   obfuscator = MyObfuscate.new({
     :people => {
-      :myspace_id                => { :type => :null },
       :email                     => { :type => :email, :skip_regexes => email_skip_regexes },
       :ethnicity                 => { :type => :null },
       :crypted_password          => { :type => :fixed, :string => "SOME_FIXED_PASSWORD_FOR_EASE_OF_DEBUGGING" },
