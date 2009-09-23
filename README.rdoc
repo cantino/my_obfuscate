@@ -10,13 +10,9 @@ Make an obfuscator.rb script:
   require "rubygems"
   require "my_obfuscate"
 
-  email_whitelist = ['mike@honk.com', 'brian@honk.com']
-  email_whitelist_regexes = email_whitelist.map {|email| /$#{email}^/i}
-  email_skip_regexes = [/^[\w\.\_]+@honk\.com$/i] + email_whitelist_regexes
-
   obfuscator = MyObfuscate.new({
     :people => {
-      :email                     => { :type => :email, :skip_regexes => email_skip_regexes },
+      :email                     => { :type => :email, :skip_regexes => [/^[\w\.\_]+@my_company\.com$/i] },
       :ethnicity                 => { :type => :null },
       :crypted_password          => { :type => :fixed, :string => "SOME_FIXED_PASSWORD_FOR_EASE_OF_DEBUGGING" },
       :salt                      => { :type => :fixed, :string => "SOME_THING" },
@@ -44,17 +40,14 @@ Make an obfuscator.rb script:
 
 And to get an obfuscated dump:
   mysqldump -c --add-drop-table -u user -p database | ruby obfuscator.rb > obfuscated_dump.sql
-Note, the -c option on mysqldump is required to use my_obfuscator.
+Note that the -c option on mysqldump is required to use my_obfuscator.
 
 == Note on Patches/Pull Requests
  
 * Fork the project.
 * Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but
-   bump version in a commit by itself I can ignore when I pull)
+* Add tests for it. This is important so I don't break it in a future version unintentionally.
+* Commit, do not mess with rakefile, version, or history.  (If you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
 
 == Copyright
