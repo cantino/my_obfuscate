@@ -107,7 +107,6 @@ class MyObfuscate
     return row unless table_config.is_a?(Hash)
 
     table_config.each do |column, definition|
-      # Don't change email addresses when they end in @honk.com.
       index = columns.index(column)
 
       if definition[:skip_regexes]
