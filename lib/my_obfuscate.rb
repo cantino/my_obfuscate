@@ -1,6 +1,7 @@
-# This can parse mysqldump outputs when the dumps have option -c, which includes column names in the insert statements.
 require 'jcode'
 
+# Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
+# column names in the insert statements.
 class MyObfuscate
   attr_accessor :config
 
@@ -9,12 +10,16 @@ class MyObfuscate
   USERNAME_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_" + NUMBER_CHARS
   SENSIBLE_CHARS = USERNAME_CHARS + '+-=[{]}/?|!@#$%^&*()`~'
 
+  # Make a new MyObfuscate object.  Pass in a configuration structure to define how the obfuscation should be
+  # performed.  See the README.rdoc file for more information.
   def initialize(configuration = {})
     @config = configuration
   end
 
-  # We assume that every INSERT INTO line occupies one line in the file, with no internal linebreaks.
+  # Read an input stream and dump out an obfuscated output stream.  These streams could be StringIO objects, Files,
+  # or STDIN and STDOUT.
   def obfuscate(input_io, output_io)
+    # We assume that every INSERT INTO line occupies one line in the file, with no internal linebreaks.
     input_io.each do |line|
       if regex_result = INSERT_REGEX.match(line)
         table_name = regex_result[1].to_sym

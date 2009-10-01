@@ -36,8 +36,8 @@ Make an obfuscator.rb script:
     :invite_requests             => :truncate,
 
     :relationships => {
-      :account_id                => { :type => :string, :length => 8, :chars => DatabaseDumpObfuscator::NUMBER_CHARS },
-      :code                      => { :type => :string, :length => 8, :chars => DatabaseDumpObfuscator::USERNAME_CHARS }
+      :account_id                => { :type => :string, :length => 8, :chars => MyObfuscate::NUMBER_CHARS },
+      :code                      => { :type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS }
     }
   })
   obfuscator.obfuscate(STDIN, STDOUT)
