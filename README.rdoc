@@ -43,7 +43,7 @@ Make an obfuscator.rb script:
   obfuscator.obfuscate(STDIN, STDOUT)
 
 And to get an obfuscated dump:
-  mysqldump -c --add-drop-table -u user -p database | ruby obfuscator.rb > obfuscated_dump.sql
+  mysqldump -c --add-drop-table -u user -ppassword database | ruby obfuscator.rb > obfuscated_dump.sql
 Note that the -c option on mysqldump is required to use my_obfuscator.
 
 == Note on Patches/Pull Requests

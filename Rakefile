@@ -1,6 +1,14 @@
 require 'rubygems'
 require 'rake'
 
+
+# When updating:
+#  rake version:bump:minor
+#  rake gemspec
+#  rake build
+#  rake rubyforge:release
+# Then git checkin and commit
+
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
@@ -14,7 +22,6 @@ begin
     gem.rubyforge_project = 'my-obfuscate'
   end
 
-  # Deploy to rubyforge with 'rake rubyforge:release'
   Jeweler::RubyforgeTasks.new do |rubyforge|
     rubyforge.doc_task = "rdoc"
   end
