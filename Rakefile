@@ -11,7 +11,12 @@ begin
     gem.homepage = "http://github.com/honkster/myobfuscate"
     gem.authors = ["Andrew Cantino", "Dave Willett", "Mike Grafton", "Mason Glaves"]
     gem.add_development_dependency "rspec"
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    gem.rubyforge_project = 'my-obfuscate'
+  end
+
+  # Deploy to rubyforge with 'rake rubyforge:release'
+  Jeweler::RubyforgeTasks.new do |rubyforge|
+    rubyforge.doc_task = "rdoc"
   end
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
