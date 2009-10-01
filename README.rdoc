@@ -2,6 +2,10 @@
 
 Standalone Ruby code for the selective rewriting of MySQL dumps in order to protect user privacy.
 
+= Install
+
+  sudo gem install my_obfuscate
+
 = Example Usage
 
 Make an obfuscator.rb script:

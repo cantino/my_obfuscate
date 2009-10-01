@@ -47,7 +47,7 @@ class MyObfuscate
     "INSERT INTO `#{table_name}` (`#{columns.join('`, `')}`) VALUES #{output};"
   end
 
-  # Note: Strings must be quoted in single quotes!
+  # Be aware, strings must be quoted in single quotes!
   def self.context_aware_mysql_string_split(string)
     in_sub_insert = false
     in_quoted_string = false
