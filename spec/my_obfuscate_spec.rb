@@ -69,6 +69,50 @@ describe MyObfuscate do
       new_row[1].should_not == "something_else"
     end
 
+    describe "conditional directives" do
+      it "should honor :unless conditionals" do
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :unless => lambda {|row| row[:a] == "blah"} }}, [:a, :b, :c])
+        new_row[0].should_not == "123"
+        new_row[0].should == "blah"
+
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :unless => lambda {|row| row[:a] == "not blah"} }}, [:a, :b, :c])
+        new_row[0].should == "123"
+      end
+
+      it "should honor :if conditionals" do
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => lambda {|row| row[:a] == "blah"} }}, [:a, :b, :c])
+        new_row[0].should == "123"
+
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if=> lambda {|row| row[:a] == "not blah"} }}, [:a, :b, :c])
+        new_row[0].should_not == "123"
+        new_row[0].should == "blah"
+      end
+
+      it "should supply the original row values to the conditional" do
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else"], { :a => { :type => :fixed, :string => "123" }, :b => { :type => :fixed, :string => "yup", :if => lambda {|row| row[:a] == "blah"}}}, [:a, :b])
+        new_row[0].should == "123"
+        new_row[1].should == "yup"
+      end
+
+      it "should honor combined :unless and :if conditionals" do
+        #both true
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => lambda {|row| row[:a] == "blah"}, :unless =>  lambda {|row| row[:b] == "something_else"} }}, [:a, :b, :c])
+        new_row[0].should == "blah"
+
+        #both false
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => lambda {|row| row[:a] == "not blah"}, :unless =>  lambda {|row| row[:b] == "not something_else"} }}, [:a, :b, :c])
+        new_row[0].should == "blah"
+
+        #if true, #unless false
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => lambda {|row| row[:a] == "blah"}, :unless =>  lambda {|row| row[:b] == "not something_else"} }}, [:a, :b, :c])
+        new_row[0].should == "123"
+
+        #if false, #unless true
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => lambda {|row| row[:a] == "not blah"}, :unless =>  lambda {|row| row[:b] == "something_else"} }}, [:a, :b, :c])
+        new_row[0].should == "blah"
+      end
+    end
+
     it "should be able to generate random integers in ranges" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :c => { :type => :integer, :between => 10..100 }}, [:a, :b, :c])
       new_row.length.should == 3
@@ -102,6 +146,12 @@ describe MyObfuscate do
       new_row[1].should == nil
     end
 
+  end
+
+  describe "MyObfuscate.row_as_hash" do
+    it "will map row values into a hash with column names as keys" do
+      MyObfuscate.row_as_hash([1, 2, 3, 4], [:a, :b, :c, :d]).should == {:a => 1, :b => 2, :c => 3, :d => 4}
+    end
   end
 
   describe "#obfuscate" do

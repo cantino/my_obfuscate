@@ -25,7 +25,7 @@ class MyObfuscate
         table_name = regex_result[1].to_sym
         columns = regex_result[2].split(/`\s*,\s*`/).map { |col| col.gsub('`',"").to_sym }
         if config[table_name]
-          output_io.puts obfuscate_line(line, table_name, columns)
+          output_io.puts obfuscate_bulk_insert_line(line, table_name, columns)
         else
           output_io.write line
         end
@@ -108,11 +108,21 @@ class MyObfuscate
     output
   end
 
+  def self.row_as_hash(row, columns)
+    columns.zip(row).inject({}) {|m, (name, value)| m[name] = value; m}
+  end
+
   def self.apply_table_config(row, table_config, columns)
     return row unless table_config.is_a?(Hash)
+    row_hash = row_as_hash(row, columns)
 
     table_config.each do |column, definition|
       index = columns.index(column)
+
+      next if definition[:unless] && definition[:unless].call(row_hash)
+      if definition[:if]
+        next unless definition[:if].call(row_hash)
+      end
 
       if definition[:skip_regexes]
         next if definition[:skip_regexes].any? {|regex| row[index] =~ regex}
@@ -162,7 +172,7 @@ class MyObfuscate
     end
   end
 
-  def obfuscate_line(line, table_name, columns)
+  def obfuscate_bulk_insert_line (line, table_name, columns)
     table_config = config[table_name]
     if table_config == :truncate
       ""
