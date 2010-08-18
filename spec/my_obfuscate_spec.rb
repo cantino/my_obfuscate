@@ -126,6 +126,18 @@ describe MyObfuscate do
       new_row[1].should == "hello"
     end
 
+    it "should be able to substitute a proc that returns a string" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :fixed, :string => proc{ "Hello World" } }}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[1].should == "Hello World"
+    end
+
+    it "should be able to recieve the existing content on the proc" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :fixed, :string => proc{|a| a } }}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[1].should == "something_else"
+    end
+
     it "should be able to substitute fixed strings from a random set" do
       looking_for = ["hello", "world"]
       original_looking_for = looking_for.dup
