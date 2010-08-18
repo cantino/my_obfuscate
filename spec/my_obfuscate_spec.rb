@@ -133,7 +133,7 @@ describe MyObfuscate do
     end
 
     it "should be able to recieve the existing content on the proc" do
-      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :fixed, :string => proc{|a| a } }}, [:a, :b, :c])
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :fixed, :string => proc{|a| a[:b] } }}, [:a, :b, :c])
       new_row.length.should == 3
       new_row[1].should == "something_else"
     end

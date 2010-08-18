@@ -141,7 +141,7 @@ class MyObfuscate
           else
             case definition[:string]
             when Proc
-              definition[:string].call(row_hash[column])
+              definition[:string].call(row_hash)
             else
               definition[:string]
             end
