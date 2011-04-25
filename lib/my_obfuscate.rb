@@ -1,4 +1,4 @@
-require 'jcode'
+require 'jcode' if RUBY_VERSION < '1.9'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
