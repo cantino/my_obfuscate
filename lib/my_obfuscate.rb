@@ -120,9 +120,7 @@ class MyObfuscate
       index = columns.index(column)
 
       next if definition[:unless] && definition[:unless].call(row_hash)
-      if definition[:if]
-        next unless definition[:if].call(row_hash)
-      end
+      next if definition[:if] && !definition[:if].call(row_hash)
 
       if definition[:skip_regexes]
         next if definition[:skip_regexes].any? {|regex| row[index] =~ regex}
@@ -139,16 +137,14 @@ class MyObfuscate
           if definition[:one_of]
             definition[:one_of][(rand * definition[:one_of].length).to_i]
           else
-            case definition[:string]
-            when Proc
-              definition[:string].call(row_hash)
-            else
-              definition[:string]
-            end
+            definition[:string].is_a?(Proc) ? definition[:string].call(row_hash) : definition[:string]
           end
         when :null
           nil
+        when :keep
+          row[index]
         else
+          STDERR.puts "Keeping a column value by providing an unknown type is deprecated.  Use :keep instead."
           row[index]
       end
     end
@@ -173,11 +169,11 @@ class MyObfuscate
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
       end.join("\n")
-       raise RuntimeError.new(error_message)
+      raise RuntimeError.new(error_message)
     end
   end
 
-  def obfuscate_bulk_insert_line (line, table_name, columns)
+  def obfuscate_bulk_insert_line(line, table_name, columns)
     table_config = config[table_name]
     if table_config == :truncate
       ""

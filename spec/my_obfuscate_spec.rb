@@ -1,4 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
+require 'spec_helper'
 
 describe MyObfuscate do
   describe "MyObfuscate.context_aware_mysql_string_split" do
@@ -158,6 +158,17 @@ describe MyObfuscate do
       new_row[1].should == nil
     end
 
+    it "should be able to :keep the value the same" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :keep }}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[1].should == "something_else"
+    end
+
+    it "should keep the value when given an unknown type (for now)" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :unknown_type }}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[1].should == "something_else"
+    end
   end
 
   describe "MyObfuscate.row_as_hash" do
