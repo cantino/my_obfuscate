@@ -140,11 +140,11 @@ class MyObfuscate
         when :string
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
-          Faker::Lorem.sentences(definition[:number] || 1).join(".  ")
+          Faker::Lorem.sentences(definition[:number] || 1).join(".  ").gsub(/['"\n\t\r]/, '')
         when :name
-          Faker::Name.name
+          Faker::Name.name.gsub(/['"\n\t\r]/, '')
         when :address
-          "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}"
+          "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}".gsub(/['"\n\t\r]/, '')
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
