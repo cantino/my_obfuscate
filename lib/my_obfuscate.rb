@@ -139,7 +139,12 @@ class MyObfuscate
           if definition[:one_of]
             definition[:one_of][(rand * definition[:one_of].length).to_i]
           else
-            definition[:string]
+            case definition[:string]
+            when Proc
+              definition[:string].call(row_hash)
+            else
+              definition[:string]
+            end
           end
         when :null
           nil
