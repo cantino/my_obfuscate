@@ -1,2 +1,1 @@
-rvm ruby-1.9.2@my_obfuscate --create
-
+rvm @my_obfuscate --create
