@@ -132,7 +132,7 @@ describe MyObfuscate do
       new_row[1].should == "Hello World"
     end
 
-    it "should be able to recieve the existing content on the proc" do
+    it "should provide the row to the proc" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :fixed, :string => proc{|a| a[:b] } }}, [:a, :b, :c])
       new_row.length.should == 3
       new_row[1].should == "something_else"
@@ -152,6 +152,13 @@ describe MyObfuscate do
       looking_for.should be_empty
     end
 
+    it "should treat a symbol in the column definition as an implicit { :type => symbol }" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => :null, :a => :keep }, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should == "blah"
+      new_row[1].should == nil
+    end
+
     it "should be able to set things NULL" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :null }}, [:a, :b, :c])
       new_row.length.should == 3
@@ -164,10 +171,14 @@ describe MyObfuscate do
       new_row[1].should == "something_else"
     end
 
-    it "should keep the value when given an unknown type (for now)" do
+    it "should keep the value when given an unknown type, but should display a warning" do
+      $stderr = error_output = StringIO.new
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :b => { :type => :unknown_type }}, [:a, :b, :c])
+      $stderr = STDERR
       new_row.length.should == 3
       new_row[1].should == "something_else"
+      error_output.rewind
+      error_output.read.should =~ /Keeping a column value by providing an unknown type is deprecated/
     end
   end
 
@@ -217,6 +228,7 @@ describe MyObfuscate do
         @database_dump = StringIO.new(<<-SQL)
           INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54),('dontmurderme@direwolf.com','direwolf', 'somethingelse3', 44);
           INSERT INTO `another_table` (`a`, `b`, `c`, `d`) VALUES (1,2,3,4), (5,6,7,8);
+          INSERT INTO `some_table_to_keep` (`a`, `b`, `c`, `d`) VALUES (1,2,3,4), (5,6,7,8);
           INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','kjhjd^&dkjh', 'aawefjkafe'), ('hello1','kjhj!', 892938), ('hello2','moose!!', NULL);
           INSERT INTO `an_ignored_table` (`col`, `col2`) VALUES ('hello','kjhjd^&dkjh'), ('hello1','kjhj!'), ('hello2','moose!!');
         SQL
@@ -228,6 +240,7 @@ describe MyObfuscate do
             :age => { :type => :integer, :between => 10...80 }
           },
           :another_table => :truncate,
+          :some_table_to_keep => :keep,
           :one_more_table => {
             # Note: fixed strings must be pre-SQL escaped!
             :password => { :type => :fixed, :string => "monkey" },
@@ -235,7 +248,9 @@ describe MyObfuscate do
           }
         })
         @output = StringIO.new
+        $stderr = @error_output = StringIO.new
         @ddo.obfuscate(@database_dump, @output)
+        $stderr = STDERR
         @output.rewind
         @output_string = @output.read
       end
@@ -245,8 +260,14 @@ describe MyObfuscate do
         @output_string.should include("INSERT INTO `one_more_table`")
       end
 
-      it "should ignore tables that it doesn't know about" do
+      it "should be able to declare tables to keep" do
+        @output_string.should include("INSERT INTO `some_table_to_keep` (`a`, `b`, `c`, `d`) VALUES (1,2,3,4), (5,6,7,8);")
+      end
+
+      it "should ignore tables that it doesn't know about, but should warn" do
         @output_string.should include("INSERT INTO `an_ignored_table` (`col`, `col2`) VALUES ('hello','kjhjd^&dkjh'), ('hello1','kjhj!'), ('hello2','moose!!');")
+        @error_output.rewind
+        @error_output.read.should =~ /an_ignored_table was not specified in the config/
       end
 
       it "should obfuscate the tables" do

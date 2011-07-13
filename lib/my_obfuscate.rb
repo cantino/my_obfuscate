@@ -27,6 +27,7 @@ class MyObfuscate
         if config[table_name]
           output_io.puts obfuscate_bulk_insert_line(line, table_name, columns)
         else
+          $stderr.puts "Deprecated: #{table_name} was not specified in the config.  A future release will cause this to be an error.  Please specify the table definition or set it to :keep."
           output_io.write line
         end
       else
@@ -118,6 +119,8 @@ class MyObfuscate
 
     table_config.each do |column, definition|
       index = columns.index(column)
+      
+      definition = { :type => definition } if definition.is_a?(Symbol)
 
       next if definition[:unless] && definition[:unless].call(row_hash)
       next if definition[:if] && !definition[:if].call(row_hash)
@@ -144,7 +147,7 @@ class MyObfuscate
         when :keep
           row[index]
         else
-          STDERR.puts "Keeping a column value by providing an unknown type is deprecated.  Use :keep instead."
+          $stderr.puts "Keeping a column value by providing an unknown type is deprecated.  Use :keep instead."
           row[index]
       end
     end
@@ -177,6 +180,8 @@ class MyObfuscate
     table_config = config[table_name]
     if table_config == :truncate
       ""
+    elsif table_config == :keep
+      line
     else
       check_for_missing_columns(table_name, columns)
       # Note: Remember to SQL escape strings in what you pass back.
