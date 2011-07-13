@@ -33,7 +33,7 @@ describe MyObfuscate do
     end
   end
 
-  describe "MyObfuscate.reasembling_each_insert" do
+  describe "MyObfuscate.reassembling_each_insert" do
     before do
       @column_names = [:a, :b, :c, :d]
       @test_insert = "INSERT INTO `some_table` (`a`, `b`, `c`, `d`) VALUES ('(\\'bob@bob.com','b()ob','some(thingelse1','25)('),('joe@joe.com','joe','somethingelse2','54');"
@@ -45,7 +45,7 @@ describe MyObfuscate do
 
     it "should yield each subinsert and reassemble the result" do
       count = 0
-      reassembled = MyObfuscate.reasembling_each_insert(@test_insert, "some_table", @column_names) do |sub_insert|
+      reassembled = MyObfuscate.reassembling_each_insert(@test_insert, "some_table", @column_names) do |sub_insert|
         sub_insert.should == @test_insert_passes.shift
         count += 1
         sub_insert
@@ -180,6 +180,15 @@ describe MyObfuscate do
       error_output.rewind
       error_output.read.should =~ /Keeping a column value by providing an unknown type is deprecated/
     end
+
+    it "should be able to substitute lorem ipsum text" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a => :lorem, :b => { :type => :lorem, :number => 2 } }, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should_not =~ /\w\.(?!\Z)/
+      new_row[1].should_not == "something_else"
+      new_row[1].should =~ /\w\.(?!\Z)/
+    end
   end
 
   describe "MyObfuscate.row_as_hash" do
@@ -284,6 +293,26 @@ describe MyObfuscate do
         @output_string.should include("('bob@honk.com',")
         @output_string.should include("('dontmurderme@direwolf.com',")
         @output_string.should_not include("joe@joe.com")
+      end
+    end
+
+    context "when fail_on_unspecified_columns is set to true" do
+      it "should raise an exception when an unspecified column is found" do
+        @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54),('dontmurderme@direwolf.com','direwolf', 'somethingelse3', 44);
+        SQL
+
+        @ddo = MyObfuscate.new({
+          :some_table => {
+            :email => { :type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/] },
+            :name => { :type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS },
+            :age => { :type => :integer, :between => 10...80 }
+          }
+        })
+        @ddo.fail_on_unspecified_columns = true
+        lambda {
+          @ddo.obfuscate(@database_dump, StringIO.new)
+        }.should raise_error(/column 'something' defined/i)
       end
     end
   end

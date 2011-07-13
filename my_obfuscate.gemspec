@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.summary = %q{Standalone Ruby code for the selective rewriting of MySQL dumps in order to protect user privacy.}
 
   s.add_development_dependency "rspec"
+  s.add_dependency "faker", "=0.9.5"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

@@ -42,6 +42,7 @@ Make an obfuscator.rb script:
       :code                      => { :type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS }
     }
   })
+  obfuscator.fail_on_unspecified_columns = true # if you want it to require every column in the table to be in the above definition
   obfuscator.obfuscate(STDIN, STDOUT)
 
 And to get an obfuscated dump:

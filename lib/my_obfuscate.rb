@@ -1,4 +1,5 @@
 require 'jcode' if RUBY_VERSION < '1.9'
+require 'faker'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
@@ -14,6 +15,14 @@ class MyObfuscate
   # performed.  See the README.rdoc file for more information.
   def initialize(configuration = {})
     @config = configuration
+  end
+
+  def fail_on_unspecified_columns?
+    @fail_on_unspecified_columns
+  end
+
+  def fail_on_unspecified_columns=(val)
+    @fail_on_unspecified_columns = val
   end
 
   # Read an input stream and dump out an obfuscated output stream.  These streams could be StringIO objects, Files,
@@ -36,7 +45,7 @@ class MyObfuscate
     end
   end
 
-  def self.reasembling_each_insert(line, table_name, columns)
+  def self.reassembling_each_insert(line, table_name, columns)
     line = line.gsub(INSERT_REGEX, '').gsub(/\s*;\s*$/, '')
     output = context_aware_mysql_string_split(line).map do |sub_insert|
       result = yield(sub_insert)
@@ -131,9 +140,11 @@ class MyObfuscate
 
       row[index.to_i] = case definition[:type]
         when :email
-          random_string(4..10, USERNAME_CHARS) + "@example.com"
+          random_string(definition[:length] || (4..10), USERNAME_CHARS) + "@example.com"
         when :string
-          random_string(definition[:length], definition[:chars] || SENSIBLE_CHARS)
+          random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
+        when :lorem
+          Faker::Lorem.sentences(definition[:number] || 1).join(".  ")
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
@@ -166,11 +177,21 @@ class MyObfuscate
     out
   end
 
-  def check_for_missing_columns(table_name, columns)
+  def check_for_defined_columns_not_in_table(table_name, columns)
     missing_columns = config[table_name].keys - columns
     unless missing_columns.length == 0
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
+      end.join("\n")
+      raise RuntimeError.new(error_message)
+    end
+  end
+
+  def check_for_table_columns_not_in_definition(table_name, columns)
+    missing_columns = columns - config[table_name].keys
+    unless missing_columns.length == 0
+      error_message = missing_columns.map do |missing_column|
+        "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
       end.join("\n")
       raise RuntimeError.new(error_message)
     end
@@ -183,9 +204,10 @@ class MyObfuscate
     elsif table_config == :keep
       line
     else
-      check_for_missing_columns(table_name, columns)
+      check_for_defined_columns_not_in_table(table_name, columns)
+      check_for_table_columns_not_in_definition(table_name, columns) if fail_on_unspecified_columns?
       # Note: Remember to SQL escape strings in what you pass back.
-      MyObfuscate.reasembling_each_insert(line, table_name, columns) do |row|
+      MyObfuscate.reassembling_each_insert(line, table_name, columns) do |row|
         MyObfuscate.apply_table_config(row, table_config, columns)
       end
     end
