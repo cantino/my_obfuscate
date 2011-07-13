@@ -297,7 +297,7 @@ describe MyObfuscate do
     end
 
     context "when fail_on_unspecified_columns is set to true" do
-      it "should raise an exception when an unspecified column is found" do
+      before do
         @database_dump = StringIO.new(<<-SQL)
           INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54),('dontmurderme@direwolf.com','direwolf', 'somethingelse3', 44);
         SQL
@@ -310,9 +310,19 @@ describe MyObfuscate do
           }
         })
         @ddo.fail_on_unspecified_columns = true
+      end
+
+      it "should raise an exception when an unspecified column is found" do
         lambda {
           @ddo.obfuscate(@database_dump, StringIO.new)
         }.should raise_error(/column 'something' defined/i)
+      end
+
+      it "should accept columns defined in globally_kept_columns" do
+        @ddo.globally_kept_columns = %w[something]
+        lambda {
+          @ddo.obfuscate(@database_dump, StringIO.new)
+        }.should_not raise_error
       end
     end
   end

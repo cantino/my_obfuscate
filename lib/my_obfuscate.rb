@@ -4,7 +4,7 @@ require 'faker'
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
 class MyObfuscate
-  attr_accessor :config
+  attr_accessor :config, :globally_kept_columns, :fail_on_unspecified_columns
 
   INSERT_REGEX = /^\s*INSERT INTO `(.*?)` \((.*?)\) VALUES\s*/i
   NUMBER_CHARS = "1234567890"
@@ -19,10 +19,6 @@ class MyObfuscate
 
   def fail_on_unspecified_columns?
     @fail_on_unspecified_columns
-  end
-
-  def fail_on_unspecified_columns=(val)
-    @fail_on_unspecified_columns = val
   end
 
   # Read an input stream and dump out an obfuscated output stream.  These streams could be StringIO objects, Files,
@@ -188,7 +184,7 @@ class MyObfuscate
   end
 
   def check_for_table_columns_not_in_definition(table_name, columns)
-    missing_columns = columns - config[table_name].keys
+    missing_columns = columns - (config[table_name].keys + (globally_kept_columns || []).map {|i| i.to_sym}).uniq
     unless missing_columns.length == 0
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
