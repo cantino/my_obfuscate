@@ -141,6 +141,10 @@ class MyObfuscate
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
           Faker::Lorem.sentences(definition[:number] || 1).join(".  ")
+        when :name
+          Faker::Name.name
+        when :address
+          "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}"
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
@@ -154,7 +158,7 @@ class MyObfuscate
         when :keep
           row[index]
         else
-          $stderr.puts "Keeping a column value by providing an unknown type is deprecated.  Use :keep instead."
+          $stderr.puts "Keeping a column value by providing an unknown type (#{definition[:type]}) is deprecated.  Use :keep instead."
           row[index]
       end
     end

@@ -178,7 +178,7 @@ describe MyObfuscate do
       new_row.length.should == 3
       new_row[1].should == "something_else"
       error_output.rewind
-      error_output.read.should =~ /Keeping a column value by providing an unknown type is deprecated/
+      error_output.read.should =~ /Keeping a column value by.*?unknown_type/
     end
 
     it "should be able to substitute lorem ipsum text" do
@@ -188,6 +188,20 @@ describe MyObfuscate do
       new_row[0].should_not =~ /\w\.(?!\Z)/
       new_row[1].should_not == "something_else"
       new_row[1].should =~ /\w\.(?!\Z)/
+    end
+
+    it "should be able to generate an :address" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a => :address }, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should =~ /\d+ \w/
+    end
+
+    it "should be able to generate a :name" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a => :name }, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should =~ / /
     end
   end
 
