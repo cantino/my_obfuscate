@@ -30,6 +30,7 @@ Make an obfuscator.rb script:
       :postal_code               => { :type => :fixed, :string => "94109", :unless => lambda {|person| person[:postal_code] == "12345"} },
       :name                      => :name,
       :full_address              => :address,
+      :bio                       => { :type => :lorem, :number => 4 },
       :relationship_status       => { :type => :fixed, :one_of => ["Single", "Divorced", "Married", "Engaged", "In a Relationship"] },
       :has_children              => { :type => :integer, :between => 0..1 },
     },
