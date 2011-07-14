@@ -77,6 +77,10 @@ describe MyObfuscate do
 
         new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :unless => lambda {|row| row[:a] == "not blah"} }}, [:a, :b, :c])
         new_row[0].should == "123"
+
+        new_row = MyObfuscate.apply_table_config([nil, "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :unless => :nil }, :b=> { :type => :fixed, :string => "123", :unless => :nil } }, [:a, :b, :c])
+        new_row[0].should == nil
+        new_row[1].should == "123"
       end
 
       it "should honor :if conditionals" do
@@ -86,6 +90,10 @@ describe MyObfuscate do
         new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if=> lambda {|row| row[:a] == "not blah"} }}, [:a, :b, :c])
         new_row[0].should_not == "123"
         new_row[0].should == "blah"
+
+        new_row = MyObfuscate.apply_table_config([nil, "something_else", "5"], { :a=> { :type => :fixed, :string => "123", :if => :nil }, :b=> { :type => :fixed, :string => "123", :if => :nil } }, [:a, :b, :c])
+        new_row[0].should == "123"
+        new_row[1].should == "something_else"
       end
 
       it "should supply the original row values to the conditional" do

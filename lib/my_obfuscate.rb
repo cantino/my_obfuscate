@@ -127,8 +127,8 @@ class MyObfuscate
       
       definition = { :type => definition } if definition.is_a?(Symbol)
 
-      next if definition[:unless] && definition[:unless].call(row_hash)
-      next if definition[:if] && !definition[:if].call(row_hash)
+      next if definition[:unless] && ((definition[:unless].is_a?(Proc) && definition[:unless].call(row_hash)) || (definition[:unless] == :nil && row[index].nil?))
+      next if definition[:if] && ((definition[:if].is_a?(Proc) && !definition[:if].call(row_hash)) || (definition[:if] == :nil && !row[index].nil?))
 
       if definition[:skip_regexes]
         next if definition[:skip_regexes].any? {|regex| row[index] =~ regex}
