@@ -41,4 +41,18 @@ describe MyObfuscate::SqlServer do
       subject.rows_to_be_inserted(string).should == fields
     end
   end
+
+  describe "#make_valid_value_string" do
+    it "should output 'NULL' when the value is nil" do
+      subject.make_valid_value_string(nil).should == "NULL"
+    end
+
+    it "should enclose the value in quotes if it's a string" do
+      subject.make_valid_value_string("something").should == "N'something'"
+    end
+
+    it "should not enclose the value in quotes if it is a method call" do
+      subject.make_valid_value_string("CAST('fooo' AS DATETIME)").should == "CAST('fooo' AS DATETIME)"
+    end
+  end
 end

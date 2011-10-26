@@ -15,6 +15,20 @@ class MyObfuscate::SqlServer
     context_aware_sql_server_string_split(line)
   end
 
+  def make_valid_value_string(value)
+    if value.nil?
+      "NULL"
+    elsif value.match(/^[A-Z]+\(.*?\)$/)
+      value
+    else
+      "N'#{value}'"
+    end
+  end
+
+  def make_insert_statement(table_name, column_names, values_strings)
+    "INSERT [dbo].[#{table_name}] ([#{column_names.join("], [")}]) VALUES #{values_strings};"
+  end
+
   private
 
   def context_aware_sql_server_string_split(string)

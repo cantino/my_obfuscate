@@ -319,7 +319,153 @@ describe MyObfuscate do
     end
 
     describe "when using MS SQL Server" do
+      context "when there is nothing to obfuscate" do
+        it "should accept an IO object for input and output, and copy the input to the output" do
+          ddo = MyObfuscate.new
+          ddo.database_type = :sql_server
+          string = "hello, world\nsup?"
+          input = StringIO.new(string)
+          output = StringIO.new
+          ddo.obfuscate(input, output)
+          input.rewind
+          output.rewind
+          output.read.should == string
+        end
+      end
 
+      context "when the dump to obfuscate is missing columns" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo =  MyObfuscate.new({
+              :some_table => {
+                  :email => {:type => :email, :honk_email_skip => true},
+                  :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                  :gender => {:type => :fixed, :string => "m"}
+              }})
+          @ddo.database_type = :sql_server
+          @output = StringIO.new
+        end
+
+        it "should raise an error if a column name can't be found" do
+          lambda {
+            @ddo.obfuscate(@database_dump, @output)
+          }.should raise_error
+        end
+      end
+
+      context "when there is something to obfuscate" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25);
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54);
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'dontmurderme@direwolf.com',N'direwolf', N'somethingelse3', 44);
+          INSERT [dbo].[another_table] ([a], [b], [c], [d]) VALUES (1,2,3,4);
+          INSERT [dbo].[another_table] ([a], [b], [c], [d]) VALUES (5,6,7,8);
+          INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (1,2,3,4);
+          INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (5,6,7,8);
+          INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'kjhjd^&dkjh', N'aawefjkafe');
+          INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'kjhj!', 892938);
+          INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'moose!!', NULL);
+          INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello',N'kjhjd^&dkjh');
+          INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello1',N'kjhj!');
+          INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello2',N'moose!!');
+          SQL
+
+          @ddo = MyObfuscate.new({
+               :some_table => {
+                   :email => {:type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/]},
+                   :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                   :age => {:type => :integer, :between => 10...80}
+               },
+               :another_table => :truncate,
+               :some_table_to_keep => :keep,
+               :one_more_table => {
+                   # Note: fixed strings must be pre-SQL escaped!
+                   :password => {:type => :fixed, :string => "monkey"},
+                   :c => {:type => :null}
+               }
+           })
+          @ddo.database_type = :sql_server
+
+          @output = StringIO.new
+          $stderr = @error_output = StringIO.new
+          @ddo.obfuscate(@database_dump, @output)
+          $stderr = STDERR
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should be able to truncate tables" do
+          @output_string.should_not include("INSERT [dbo].[another_table]")
+          @output_string.should include("INSERT [dbo].[one_more_table]")
+        end
+
+        it "should be able to declare tables to keep" do
+          @output_string.should include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (1,2,3,4);")
+          @output_string.should include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (5,6,7,8);")
+        end
+
+        it "should ignore tables that it doesn't know about, but should warn" do
+          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello',N'kjhjd^&dkjh');")
+          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello1',N'kjhj!');")
+          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello2',N'moose!!');")
+          @error_output.rewind
+          @error_output.read.should =~ /an_ignored_table was not specified in the config/
+        end
+
+        it "should obfuscate the tables" do
+          @output_string.should include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (")
+          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (")
+          @output_string.should include("'some''thin,ge())lse1'")
+          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'monkey',NULL);")
+          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'monkey',NULL);")
+          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'monkey',NULL);")
+          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'kjhjd^&dkjh', N'aawefjkafe');")
+          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'kjhj!', 892938);")
+          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'moose!!', NULL);")
+          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25);")
+          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54);")
+        end
+
+        it "honors a special case: on the people table, rows with anything@honk.com in a slot marked with :honk_email_skip do not change this slot" do
+          @output_string.should include("(N'bob@honk.com',")
+          @output_string.should include("(N'dontmurderme@direwolf.com',")
+          @output_string.should_not include("joe@joe.com")
+        end
+      end
+
+      context "when fail_on_unspecified_columns is set to true" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/]},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :age => {:type => :integer, :between => 10...80}
+                                     }
+                                 })
+          @ddo.database_type = :sql_server
+          @ddo.fail_on_unspecified_columns = true
+        end
+
+        it "should raise an exception when an unspecified column is found" do
+          lambda {
+            @ddo.obfuscate(@database_dump, StringIO.new)
+          }.should raise_error(/column 'something' defined/i)
+        end
+
+        it "should accept columns defined in globally_kept_columns" do
+          @ddo.globally_kept_columns = %w[something]
+          lambda {
+            @ddo.obfuscate(@database_dump, StringIO.new)
+          }.should_not raise_error
+        end
+      end
     end
   end
 end

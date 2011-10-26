@@ -24,7 +24,11 @@ class MyObfuscate
 
   def database_helper
     if @database_helper.nil?
-      @database_helper = Mysql.new
+      if @database_type == :sql_server
+        @database_helper = SqlServer.new
+      else
+        @database_helper = Mysql.new
+      end
     end
 
     @database_helper
