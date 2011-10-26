@@ -1,1 +1,1 @@
-rvm @my_obfuscate --create
+rvm ree-1.8.7-2011.03@my_obfuscate --create
