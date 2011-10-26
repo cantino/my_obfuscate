@@ -38,6 +38,7 @@ class MyObfuscate::Mysql
     length = string.length
     fields = []
     output = []
+
     string.each_char do |i|
       if escaped
         escaped = false
@@ -78,6 +79,7 @@ class MyObfuscate::Mysql
         end
       end
     end
+
     fields << current_field unless current_field.nil?
     output << fields unless fields.length == 0
     output
