@@ -49,6 +49,10 @@ describe MyObfuscate do
         new_row = MyObfuscate.apply_table_config([nil, "something_else", "5"], {:a=> {:type => :fixed, :string => "123", :unless => :nil}, :b=> {:type => :fixed, :string => "123", :unless => :nil}}, [:a, :b, :c])
         new_row[0].should == nil
         new_row[1].should == "123"
+
+        new_row = MyObfuscate.apply_table_config(['', "something_else", "5"], {:a=> {:type => :fixed, :string => "123", :unless => :blank}, :b=> {:type => :fixed, :string => "123", :unless => :blank}}, [:a, :b, :c])
+        new_row[0].should == ''
+        new_row[1].should == "123"
       end
 
       it "should honor :if conditionals" do
@@ -60,6 +64,10 @@ describe MyObfuscate do
         new_row[0].should == "blah"
 
         new_row = MyObfuscate.apply_table_config([nil, "something_else", "5"], {:a=> {:type => :fixed, :string => "123", :if => :nil}, :b=> {:type => :fixed, :string => "123", :if => :nil}}, [:a, :b, :c])
+        new_row[0].should == "123"
+        new_row[1].should == "something_else"
+
+        new_row = MyObfuscate.apply_table_config(['', "something_else", "5"], {:a=> {:type => :fixed, :string => "123", :if => :blank}, :b=> {:type => :fixed, :string => "123", :if => :blank}}, [:a, :b, :c])
         new_row[0].should == "123"
         new_row[1].should == "something_else"
       end
@@ -178,6 +186,39 @@ describe MyObfuscate do
       new_row.length.should == 3
       new_row[0].should_not == "blah"
       new_row[0].should =~ / /
+    end
+
+    it "should be able to generate just a street address" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :street_address}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should =~ /\d+ \w/
+    end
+
+    it "should be able to generate a city" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :city}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+    end
+
+    it "should be able to generate a state" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :state}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+    end
+
+    it "should be able to generate a zip code" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :zip_code}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should =~ /\d+/
+    end
+
+    it "should be able to generate a phone number" do
+      new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :phone}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "blah"
+      new_row[0].should =~ /\d+/
     end
   end
 

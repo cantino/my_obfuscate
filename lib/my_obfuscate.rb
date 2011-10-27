@@ -71,6 +71,17 @@ class MyObfuscate
     columns.zip(row).inject({}) {|m, (name, value)| m[name] = value; m}
   end
 
+  def self.make_conditional_method(conditional_method, index, row)
+    if conditional_method.is_a?(Symbol)
+      if conditional_method == :blank
+        conditional_method = lambda { |row_hash| row[index].nil? || row[index] == '' }
+      elsif conditional_method == :nil
+        conditional_method = lambda { |row_hash| row[index].nil? }
+      end
+    end
+    conditional_method
+  end
+
   def self.apply_table_config(row, table_config, columns)
     return row unless table_config.is_a?(Hash)
     row_hash = row_as_hash(row, columns)
@@ -80,8 +91,18 @@ class MyObfuscate
       
       definition = { :type => definition } if definition.is_a?(Symbol)
 
-      next if definition[:unless] && ((definition[:unless].is_a?(Proc) && definition[:unless].call(row_hash)) || (definition[:unless] == :nil && row[index].nil?))
-      next if definition[:if] && ((definition[:if].is_a?(Proc) && !definition[:if].call(row_hash)) || (definition[:if] == :nil && !row[index].nil?))
+      if definition.has_key?(:unless)
+        unless_check = make_conditional_method(definition[:unless], index, row)
+
+        next if unless_check.call(row_hash)
+      end
+
+
+      if definition.has_key?(:if)
+        if_check = make_conditional_method(definition[:if], index, row)
+
+        next unless if_check.call(row_hash)
+      end
 
       if definition[:skip_regexes]
         next if definition[:skip_regexes].any? {|regex| row[index] =~ regex}
@@ -96,8 +117,22 @@ class MyObfuscate
           Faker::Lorem.sentences(definition[:number] || 1).join(".  ").gsub(/['"\n\t\r]/, '')
         when :name
           Faker::Name.name.gsub(/['"\n\t\r]/, '')
+        when :first_name
+          Faker::Name.first_name
+        when :last_name
+          Faker::Name.last_name
         when :address
           "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}".gsub(/['"\n\t\r]/, '')
+        when :street_address
+          Faker::Address.street_address
+        when :city
+          Faker::Address.city
+        when :state
+          Faker::Address.state_abbr
+        when :zip_code
+          Faker::Address.zip_code
+        when :phone
+          Faker::PhoneNumber.phone_number
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
