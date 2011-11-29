@@ -118,9 +118,9 @@ class MyObfuscate
         when :name
           Faker::Name.name.gsub(/['"\n\t\r]/, '')
         when :first_name
-          Faker::Name.first_name
+          Faker::Name.first_name.gsub(/['"\n\t\r]/, '')
         when :last_name
-          Faker::Name.last_name
+          Faker::Name.last_name.gsub(/['"\n\t\r]/, '')
         when :address
           "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}".gsub(/['"\n\t\r]/, '')
         when :street_address
