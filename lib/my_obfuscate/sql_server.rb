@@ -11,7 +11,7 @@ class MyObfuscate::SqlServer
   end
 
   def rows_to_be_inserted(line)
-    line = line.gsub(INSERT_REGEX, '').gsub(/\s*(;\s*)?$/, '').gsub(/^\(/, '').gsub(/\)$/, '')
+    line = line.gsub(INSERT_REGEX, '').gsub(/\s*;?\s*$/, '').gsub(/^\(/, '').gsub(/\)$/, '')
     context_aware_sql_server_string_split(line)
   end
 
@@ -63,6 +63,9 @@ class MyObfuscate::SqlServer
         current_field_value = nil
         completed_fields << current_field_value
       elsif (char == " " || char == "\t") && !in_quoted_string
+        if !current_field_value.nil? && current_field_value.start_with?("CAST(")
+          current_field_value << char
+        end
         # Don't add whitespace not in a string
       else
         current_field_value ||= ""

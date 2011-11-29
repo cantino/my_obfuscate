@@ -18,8 +18,8 @@ describe MyObfuscate::SqlServer do
 
   describe "#rows_to_be_inserted" do
     it "should split a SQL Server string into fields" do
-      string = "INSERT [dbo].[some_table] ([thing1],[thing2]) VALUES (N'bob@bob.com',N'bob', N'somethingelse1',25, '2', 10,    'hi')  ;  "
-      fields = [['bob@bob.com', 'bob', 'somethingelse1', '25', '2', '10', "hi"]]
+      string = "INSERT [dbo].[some_table] ([thing1],[thing2]) VALUES (N'bob@bob.com',N'bob', N'somethingelse1',25, '2', 10,    'hi', CAST(0x00009E1A00000000 AS DATETIME))  ;  "
+      fields = [['bob@bob.com', 'bob', 'somethingelse1', '25', '2', '10', "hi", "CAST(0x00009E1A00000000 AS DATETIME)"]]
       subject.rows_to_be_inserted(string).should == fields
     end
 
@@ -52,7 +52,7 @@ describe MyObfuscate::SqlServer do
     end
 
     it "should not enclose the value in quotes if it is a method call" do
-      subject.make_valid_value_string("CAST('fooo' AS DATETIME)").should == "CAST('fooo' AS DATETIME)"
+      subject.make_valid_value_string("CAST(0x00009E1A00000000 AS DATETIME)").should == "CAST(0x00009E1A00000000 AS DATETIME)"
     end
   end
 end

@@ -399,9 +399,9 @@ describe MyObfuscate do
       context "when there is something to obfuscate" do
         before do
           @database_dump = StringIO.new(<<-SQL)
-          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25);
-          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54);
-          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'dontmurderme@direwolf.com',N'direwolf', N'somethingelse3', 44);
+          INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25, CAST(0x00009E1A00000000 AS DATETIME));
+          INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54, CAST(0x00009E1A00000000 AS DATETIME));
+          INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (N'dontmurderme@direwolf.com',N'direwolf', N'somethingelse3', 44, CAST(0x00009E1A00000000 AS DATETIME));
           INSERT [dbo].[another_table] ([a], [b], [c], [d]) VALUES (1,2,3,4);
           INSERT [dbo].[another_table] ([a], [b], [c], [d]) VALUES (5,6,7,8);
           INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (1,2,3,4);
@@ -418,7 +418,8 @@ describe MyObfuscate do
                :some_table => {
                    :email => {:type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/]},
                    :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
-                   :age => {:type => :integer, :between => 10...80}
+                   :age => {:type => :integer, :between => 10...80},
+                   :bday => :keep
                },
                :another_table => :truncate,
                :some_table_to_keep => :keep,
@@ -457,7 +458,8 @@ describe MyObfuscate do
         end
 
         it "should obfuscate the tables" do
-          @output_string.should include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (")
+          @output_string.should include("INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (")
+          @output_string.should include("CAST(0x00009E1A00000000 AS DATETIME)")
           @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (")
           @output_string.should include("'some''thin,ge())lse1'")
           @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'monkey',NULL);")
@@ -466,8 +468,8 @@ describe MyObfuscate do
           @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'kjhjd^&dkjh', N'aawefjkafe');")
           @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'kjhj!', 892938);")
           @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'moose!!', NULL);")
-          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25);")
-          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54);")
+          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25, CAST(0x00009E1A00000000 AS DATETIME));")
+          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54, CAST(0x00009E1A00000000 AS DATETIME));")
         end
 
         it "honors a special case: on the people table, rows with anything@honk.com in a slot marked with :honk_email_skip do not change this slot" do
