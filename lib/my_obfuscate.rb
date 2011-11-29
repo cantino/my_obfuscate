@@ -114,19 +114,19 @@ class MyObfuscate
         when :string
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
-          Faker::Lorem.sentences(definition[:number] || 1).join(".  ").gsub(/['"\n\t\r]/, '')
+          clean_bad_whitespace(clean_quotes(Faker::Lorem.sentences(definition[:number] || 1).join(".  ")))
         when :name
-          Faker::Name.name.gsub(/['"\n\t\r]/, '')
+          clean_quotes(Faker::Name.name)
         when :first_name
-          Faker::Name.first_name.gsub(/['"\n\t\r]/, '')
+          clean_quotes(Faker::Name.first_name)
         when :last_name
-          Faker::Name.last_name.gsub(/['"\n\t\r]/, '')
+          clean_quotes(Faker::Name.last_name)
         when :address
-          "#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}".gsub(/['"\n\t\r]/, '')
+          clean_quotes("#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}")
         when :street_address
-          Faker::Address.street_address
+          clean_bad_whitespace(clean_quotes(Faker::Address.street_address))
         when :city
-          Faker::Address.city
+          clean_quotes(Faker::Address.city)
         when :state
           Faker::Address.state_abbr
         when :zip_code
@@ -199,5 +199,15 @@ class MyObfuscate
         MyObfuscate.apply_table_config(row, table_config, columns)
       end
     end
+  end
+  
+  private
+  
+  def self.clean_quotes(value)
+    value.gsub(/['"]/, '')
+  end
+  
+  def self.clean_bad_whitespace(value)
+    value.gsub(/[\n\t\r]/, '')
   end
 end

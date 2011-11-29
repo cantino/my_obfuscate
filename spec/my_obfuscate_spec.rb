@@ -220,6 +220,23 @@ describe MyObfuscate do
       new_row[0].should_not == "blah"
       new_row[0].should =~ /\d+/
     end
+    
+    describe "when faker generates values with quotes in them" do
+      before do
+        Faker::Address.stub(:city).and_return("O'ReillyTown")
+        Faker::Name.stub(:name).and_return("Foo O'Reilly")
+        Faker::Name.stub(:first_name).and_return("O'Foo")
+        Faker::Name.stub(:last_name).and_return("O'Reilly")
+        Faker::Lorem.stub(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
+      end
+      
+      it "should remove single quotes from the value" do
+        new_row = MyObfuscate.apply_table_config(["address", "city", "first", "last", "fullname", "some text"],
+                  {:a => :address, :b => :city, :c => :first_name, :d => :last_name, :e => :name, :f => :lorem},
+                  [:a, :b, :c, :d, :e, :f])
+        new_row.each {|value| value.should_not include("'")}
+      end
+    end
   end
 
   describe "MyObfuscate.row_as_hash" do
