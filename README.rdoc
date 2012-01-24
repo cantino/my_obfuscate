@@ -52,8 +52,16 @@ And to get an obfuscated dump:
   mysqldump -c --add-drop-table -u user -ppassword database | ruby obfuscator.rb > obfuscated_dump.sql
 Note that the -c option on mysqldump is required to use my_obfuscator.
 
+== Database Server
+
+By default the database type is assumed to be MySQL, but you can use the
+builtin SQL Server support by specifying:
+
+    obfuscator.database_type = :sql_server
+
 == Changed
 
+* Support for SQL Server
 * :unless and :if now support :nil as a shorthand for a Proc that checks for nil
 * :name, :lorem, and :address are all now supported types.  You can pass :number to :lorem to specify how many sentences to generate.  The default is one.
 * <tt>{ :type => :whatever }</tt> is now optional when no additional options are needed.  Just use <tt>:whatever</tt>.
@@ -70,4 +78,4 @@ Note that the -c option on mysqldump is required to use my_obfuscator.
 
 == Copyright
 
-Copyright (c) 2009 Honk. See LICENSE for details.
+Copyright (c) 2009 Honk. Now maintained by Iteration Labs, LLC. See LICENSE for details.
