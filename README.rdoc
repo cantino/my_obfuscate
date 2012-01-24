@@ -59,7 +59,7 @@ builtin SQL Server support by specifying:
 
     obfuscator.database_type = :sql_server
 
-== Changed
+== Changes
 
 * Support for SQL Server
 * :unless and :if now support :nil as a shorthand for a Proc that checks for nil
