@@ -76,6 +76,10 @@ builtin SQL Server support by specifying:
 * Commit, do not mess with rakefile, version, or history.  (If you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
 
+== Thanks
+
+Thanks to Mavenlink and Pivotal Labs for patches and updates!
+
 == Copyright
 
 Copyright (c) 2009 Honk. Now maintained by Iteration Labs, LLC. See LICENSE for details.

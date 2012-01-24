@@ -4,3 +4,5 @@ coverage
 rdoc
 pkg
 .idea
+.rvmrc
+Gemfile.lock
