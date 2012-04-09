@@ -1,7 +1,5 @@
 require 'jcode' if RUBY_VERSION < '1.9'
 require 'faker'
-require 'my_obfuscate/mysql'
-require 'my_obfuscate/sql_server'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
@@ -211,3 +209,6 @@ class MyObfuscate
     value.gsub(/[\n\t\r]/, '')
   end
 end
+
+require 'my_obfuscate/mysql'
+require 'my_obfuscate/sql_server'
