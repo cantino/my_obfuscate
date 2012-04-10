@@ -108,7 +108,7 @@ class MyObfuscate
 
       row[index.to_i] = case definition[:type]
         when :email
-          random_string(definition[:length] || (4..10), USERNAME_CHARS) + "@example.com"
+          clean_quotes(Faker::Internet.email)
         when :string
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
@@ -131,6 +131,10 @@ class MyObfuscate
           Faker::Address.zip_code
         when :phone
           Faker::PhoneNumber.phone_number
+        when :company
+          clean_bad_whitespace(clean_quotes(Faker::Company.name))
+        when :url
+          clean_bad_whitespace(Faker::Internet.url)
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
