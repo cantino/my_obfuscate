@@ -6,3 +6,5 @@ pkg
 .idea
 .rvmrc
 Gemfile.lock
+*.deb
+*.gem
