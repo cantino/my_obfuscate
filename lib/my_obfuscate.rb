@@ -133,6 +133,10 @@ class MyObfuscate
           Faker::PhoneNumber.phone_number
         when :company
           clean_bad_whitespace(clean_quotes(Faker::Company.name))
+        when :ipv4
+          Faker::Internet.ip_v4_address
+        when :ipv6
+          Faker::Internet.ip_v6_address
         when :url
           clean_bad_whitespace(Faker::Internet.url)
         when :integer
