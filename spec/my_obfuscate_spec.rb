@@ -174,6 +174,20 @@ describe MyObfuscate do
       new_row[1].should =~ /\w\.(?!\Z)/
     end
 
+    it "should be able to generate an :company" do
+      new_row = MyObfuscate.apply_table_config(["Smith and Sons", "something_else", "5"], {:a => :company}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "Smith and Sons"
+      new_row[0].should =~ /\w+/
+    end
+
+    it "should be able to generate an :url" do
+      new_row = MyObfuscate.apply_table_config(["http://mystuff.blogger.com", "something_else", "5"], {:a => :url}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "http://mystuff.blogger.com"
+      new_row[0].should =~ /http:\/\/\w+/
+    end
+
     it "should be able to generate an :address" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :address}, [:a, :b, :c])
       new_row.length.should == 3
