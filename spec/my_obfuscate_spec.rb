@@ -188,6 +188,20 @@ describe MyObfuscate do
       new_row[0].should =~ /http:\/\/\w+/
     end
 
+    it "should be able to generate an :ipv4" do
+      new_row = MyObfuscate.apply_table_config(["1.2.3.4", "something_else", "5"], {:a => :ipv4}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "1.2.3.4"
+      new_row[0].should =~ /\d+\.\d+\.\d+\.\d+/
+    end
+
+    it "should be able to generate an :ipv6" do
+      new_row = MyObfuscate.apply_table_config(["fe80:0000:0000:0000:0202:b3ff:fe1e:8329", "something_else", "5"], {:a => :ipv6}, [:a, :b, :c])
+      new_row.length.should == 3
+      new_row[0].should_not == "fe80:0000:0000:0000:0202:b3ff:fe1e:8329"
+      new_row[0].should =~ /[0-9a-f:]+/
+    end
+
     it "should be able to generate an :address" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else", "5"], {:a => :address}, [:a, :b, :c])
       new_row.length.should == 3
