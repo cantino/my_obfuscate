@@ -18,6 +18,8 @@ class MyObfuscate::Mysql
   def make_valid_value_string(value)
     if value.nil?
       "NULL"
+    elsif value =~ /^0x[0-9a-fA-F]+$/
+      value
     else
       "'" + value + "'"
     end

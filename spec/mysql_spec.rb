@@ -46,5 +46,33 @@ describe MyObfuscate::Mysql do
       fields = [[nil, '', '', '', '25', '2', '', "hi", '']]
       subject.rows_to_be_inserted(string).should == fields
     end
+
+    it "should work with hex encoded blobs" do
+      string = "INSERT INTO `some_table` (thing1,thing2) VALUES ('bla' , 'blobdata', 'blubb' , 0xACED00057372001F6A6176612E7574696C2E436F6C6C656) ;"
+      fields = [['bla', 'blobdata', 'blubb', '0xACED00057372001F6A6176612E7574696C2E436F6C6C656']]
+      subject.rows_to_be_inserted(string).should == fields
+    end
+  end
+
+  describe "#make_valid_value_string" do
+    it "should work with nil values" do
+      value = nil
+      subject.make_valid_value_string(value).should == 'NULL'
+    end
+
+    it "should work with hex-encoded blob data"  do
+      value = "0xACED00057372001F6A6176612E7574696C2E436F6C6C656"
+      subject.make_valid_value_string(value).should == '0xACED00057372001F6A6176612E7574696C2E436F6C6C656'
+    end
+
+    it "should quote hex-encoded ALIKE data"  do
+      value = "40x17x7"
+      subject.make_valid_value_string(value).should == "'40x17x7'"
+    end
+
+    it "should quote all other values" do
+      value = "hello world"
+      subject.make_valid_value_string(value).should == "'hello world'"
+    end
   end
 end
