@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require "my_obfuscate/version"
 
 Gem::Specification.new do |s|
-  s.name = %q{my_obfuscate}
+  s.name = %q{iterationlabs-my_obfuscate}
   s.version = MyObfuscate::VERSION
 
   s.authors = ["Andrew Cantino", "Dave Willett", "Mike Grafton", "Mason Glaves", "Greg Bell", "Mavenlink"]

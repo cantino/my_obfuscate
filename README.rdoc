@@ -4,7 +4,7 @@ Standalone Ruby code for the selective rewriting of SQL dumps in order to protec
 
 = Install
 
-  sudo gem install my_obfuscate
+  (sudo) gem install iterationlabs-my_obfuscate
 
 = Example Usage
 
@@ -49,8 +49,11 @@ Make an obfuscator.rb script:
   obfuscator.obfuscate(STDIN, STDOUT)
 
 And to get an obfuscated dump:
-  mysqldump -c --add-drop-table -u user -ppassword database | ruby obfuscator.rb > obfuscated_dump.sql
-Note that the -c option on mysqldump is required to use my_obfuscator.
+
+    mysqldump -c --add-drop-table -u user -ppassword database | ruby obfuscator.rb > obfuscated_dump.sql
+
+Note that the -c option on mysqldump is required to use my_obfuscator.  If you get MySQL errors due to very long lines,
+try some combination of --max_allowed_packet=128M, --single-transaction, --skip-extended-insert, and --quick.
 
 == Database Server
 
