@@ -62,6 +62,12 @@ builtin SQL Server support by specifying:
 
     obfuscator.database_type = :sql_server
 
+== Types
+
+Available types include: `email`, `string`, `lorem`, `name`, `first_name`,
+`last_name`, `address`, `street_address`, `city`, `state`, `zip_code`,
+`phone`, `company`, `ipv4`, `ipv6`, `url`, `integer`, `fixed`, `null`, and `keep`.
+
 == Changes
 
 * Support for SQL Server
