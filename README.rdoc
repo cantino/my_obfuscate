@@ -64,9 +64,8 @@ builtin SQL Server support by specifying:
 
 == Types
 
-Available types include: `email`, `string`, `lorem`, `name`, `first_name`,
-`last_name`, `address`, `street_address`, `city`, `state`, `zip_code`,
-`phone`, `company`, `ipv4`, `ipv6`, `url`, `integer`, `fixed`, `null`, and `keep`.
+Available types include: email, string, lorem, name, first_name, last_name, address, street_address, city, state,
+zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
 
 == Changes
 
