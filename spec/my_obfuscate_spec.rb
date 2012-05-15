@@ -27,7 +27,7 @@ describe MyObfuscate do
     it "should work on email addresses" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else"], {:a => {:type => :email}}, [:a, :b])
       new_row.length.should == 2
-      new_row.first.should =~ /^\w+\@\w+\.\w+$/
+      new_row.first.should =~ /^[\w\.]+\@\w+\.\w+$/
     end
 
     it "should work on strings" do

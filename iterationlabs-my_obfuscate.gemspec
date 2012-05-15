@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.authors = ["Andrew Cantino", "Dave Willett", "Mike Grafton", "Mason Glaves", "Greg Bell", "Mavenlink"]
   s.description = %q{Standalone Ruby code for the selective rewriting of MySQL dumps in order to protect user privacy.}
   s.email = %q{andrew@iterationlabs.com}
-  s.homepage = %q{http://github.com/iterationlabs/myobfuscate}
+  s.homepage = %q{http://github.com/iterationlabs/my_obfuscate}
   s.summary = %q{Standalone Ruby code for the selective rewriting of MySQL dumps in order to protect user privacy.}
 
   s.add_development_dependency "rspec"
