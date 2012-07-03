@@ -86,7 +86,7 @@ class MyObfuscate
 
     table_config.each do |column, definition|
       index = columns.index(column)
-      
+
       definition = { :type => definition } if definition.is_a?(Symbol)
 
       if definition.has_key?(:unless)
@@ -108,7 +108,7 @@ class MyObfuscate
 
       row[index.to_i] = case definition[:type]
         when :email
-          clean_quotes(Faker::Internet.email)
+          clean_quotes(Faker::Internet.email + ".example.com")
         when :string
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
@@ -206,13 +206,13 @@ class MyObfuscate
       end
     end
   end
-  
+
   private
-  
+
   def self.clean_quotes(value)
     value.gsub(/['"]/, '')
   end
-  
+
   def self.clean_bad_whitespace(value)
     value.gsub(/[\n\t\r]/, '')
   end
