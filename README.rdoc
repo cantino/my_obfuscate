@@ -4,7 +4,7 @@ Standalone Ruby code for the selective rewriting of SQL dumps in order to protec
 
 = Install
 
-  (sudo) gem install iterationlabs-my_obfuscate
+  (sudo) gem install my_obfuscate
 
 = Example Usage
 
