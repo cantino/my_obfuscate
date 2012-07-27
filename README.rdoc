@@ -1,6 +1,6 @@
-= my_obfuscate
+= MyObfuscate
 
-Standalone Ruby code for the selective rewriting of SQL dumps in order to protect user privacy.  Supports MySQL and SQL Server.
+You want to develop against real production data, but you don't want to violate your users' privacy.  Enter MyObfuscate: standalone Ruby code for the selective rewriting of SQL dumps in order to protect user privacy.  It supports MySQL and SQL Server.
 
 = Install
 
