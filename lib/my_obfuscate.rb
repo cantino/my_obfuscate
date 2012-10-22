@@ -1,4 +1,5 @@
 require 'jcode' if RUBY_VERSION < '1.9'
+require 'digest/md5'
 require 'faker'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
@@ -108,7 +109,8 @@ class MyObfuscate
 
       row[index.to_i] = case definition[:type]
         when :email
-          clean_quotes(Faker::Internet.email + ".example.com")
+          md5 = Digest::MD5.hexdigest(rand.to_s)[0...5]
+          clean_quotes("#{Faker::Internet.email}.#{md5}.example.com")
         when :string
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
