@@ -27,7 +27,7 @@ describe MyObfuscate do
     it "should work on email addresses" do
       new_row = MyObfuscate.apply_table_config(["blah", "something_else"], {:a => {:type => :email}}, [:a, :b])
       new_row.length.should == 2
-      new_row.first.should =~ /^[\w\.]+\@\w+\.\w+$/
+      new_row.first.should =~ /^[\w\.]+\@\w+\.\w+\.[a-f0-9]{5}\.example\.com$/
     end
 
     it "should work on strings" do
@@ -248,7 +248,7 @@ describe MyObfuscate do
       new_row[0].should_not == "blah"
       new_row[0].should =~ /\d+/
     end
-    
+
     describe "when faker generates values with quotes in them" do
       before do
         Faker::Address.stub(:city).and_return("O'ReillyTown")
@@ -257,7 +257,7 @@ describe MyObfuscate do
         Faker::Name.stub(:last_name).and_return("O'Reilly")
         Faker::Lorem.stub(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
       end
-      
+
       it "should remove single quotes from the value" do
         new_row = MyObfuscate.apply_table_config(["address", "city", "first", "last", "fullname", "some text"],
                   {:a => :address, :b => :city, :c => :first_name, :d => :last_name, :e => :name, :f => :lorem},
@@ -366,10 +366,11 @@ describe MyObfuscate do
           @output_string.should_not include("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);")
         end
 
-        it "honors a special case: on the people table, rows with anything@honk.com in a slot marked with :honk_email_skip do not change this slot" do
+        it "honors a special case: on the people table, rows with skip_regexes that match are skipped" do
           @output_string.should include("('bob@honk.com',")
           @output_string.should include("('dontmurderme@direwolf.com',")
           @output_string.should_not include("joe@joe.com")
+          @output_string.should include("example.com")
         end
       end
 

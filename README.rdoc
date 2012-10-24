@@ -52,8 +52,8 @@ And to get an obfuscated dump:
 
     mysqldump -c --add-drop-table --hex-blob -u user -ppassword database | ruby obfuscator.rb > obfuscated_dump.sql
 
-Note that the -c option on mysqldump is required to use my_obfuscator.  Additionally, the default behavior of mysqldump 
-is to output special characters. This may cause trouble, so you can request hex-encoded blob content with --hex-blob.  
+Note that the -c option on mysqldump is required to use my_obfuscator.  Additionally, the default behavior of mysqldump
+is to output special characters. This may cause trouble, so you can request hex-encoded blob content with --hex-blob.
 If you get MySQL errors due to very long lines, try some combination of --max_allowed_packet=128M, --single-transaction, --skip-extended-insert, and --quick.
 
 == Database Server
