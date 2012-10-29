@@ -87,8 +87,4 @@ zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
 
 == Thanks
 
-Thanks to Mavenlink and Pivotal Labs for patches and updates!
-
-== Copyright
-
-Copyright (c) 2009 Honk. Now maintained by Iteration Labs, LLC. See LICENSE for details.
+Thanks to Honk for the original gem, Iteration Labs for prior maintenance work, and Pivotal Labs for patches and updates!
