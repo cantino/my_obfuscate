@@ -557,4 +557,23 @@ describe MyObfuscate do
       end
     end
   end
+  
+  describe "MyObfuscate.random_english_sentences" do
+    before do
+      File.should_receive(:read).once.and_return("hello 2")
+    end
+    
+    after do
+      MyObfuscate.class_variable_set(:@@walker_method, nil)
+    end
+
+    it "should only load file data once" do
+      MyObfuscate.random_english_sentences(1)
+      MyObfuscate.random_english_sentences(1)
+    end
+
+    it "should make random sentences" do
+      MyObfuscate.random_english_sentences(2).should =~ /^(Hello( hello)+\.\s*){2}$/
+    end
+  end
 end

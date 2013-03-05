@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
   s.summary = %q{Standalone Ruby code for the selective rewriting of MySQL dumps in order to protect user privacy.}
 
   s.add_dependency "ffaker"
+  s.add_dependency "walker_method"
   s.add_development_dependency "rspec"
 
   s.files         = `git ls-files`.split("\n")

@@ -88,3 +88,9 @@ zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
 == Thanks
 
 Thanks to Honk for the original gem, Iteration Labs for prior maintenance work, and Pivotal Labs for patches and updates!
+
+== LICENSE
+
+This work is provided under the MIT License.  See the included LICENSE file.
+
+The included English word frequency list used for generating random text is provided under the Creative Commons – Attribution / ShareAlike 3.0 license by http://invokeit.wordpress.com/frequency-word-lists/

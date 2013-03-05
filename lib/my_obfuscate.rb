@@ -1,6 +1,7 @@
 require 'jcode' if RUBY_VERSION < '1.9'
 require 'digest/md5'
 require 'ffaker'
+require 'walker_method'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
@@ -115,6 +116,8 @@ class MyObfuscate
           random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
         when :lorem
           clean_bad_whitespace(clean_quotes(Faker::Lorem.sentences(definition[:number] || 1).join(".  ")))
+        when :like_english
+          random_english_sentences(definition[:number] || 1)
         when :name
           clean_quotes(Faker::Name.name)
         when :first_name
@@ -174,6 +177,27 @@ class MyObfuscate
     out = ""
     times.times { out << chars[rand * chars.length] }
     out
+  end
+  
+  def self.random_english_sentences(num)
+    @@walker_method ||= begin
+      words, counts = [], []
+      File.read(File.expand_path(File.join(File.dirname(__FILE__), 'my_obfuscate', 'data', 'en_50K.txt'))).each_line do |line|
+        word, count = line.split(/\s+/)
+        words << word
+        counts << count.to_i
+      end
+      WalkerMethod.new(words, counts)
+    end
+    
+    sentences = []
+    num.times do
+      words = []
+      (5 + rand * 6).to_i.times { words << @@walker_method.random }
+      sentences << words.join(" ") + "."
+      sentences.last[0] = sentences.last[0].upcase
+    end
+    sentences.join(" ")
   end
 
   def check_for_defined_columns_not_in_table(table_name, columns)
