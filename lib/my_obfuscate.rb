@@ -1,6 +1,6 @@
 require 'jcode' if RUBY_VERSION < '1.9'
 require 'digest/md5'
-require 'faker'
+require 'ffaker'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
@@ -122,15 +122,15 @@ class MyObfuscate
         when :last_name
           clean_quotes(Faker::Name.last_name)
         when :address
-          clean_quotes("#{Faker::Address.street_address}\\n#{Faker::Address.city}, #{Faker::Address.state_abbr} #{Faker::Address.zip_code}")
+          clean_quotes("#{Faker::AddressUS.street_address}\\n#{Faker::AddressUS.city}, #{Faker::AddressUS.state_abbr} #{Faker::AddressUS.zip_code}")
         when :street_address
-          clean_bad_whitespace(clean_quotes(Faker::Address.street_address))
+          clean_bad_whitespace(clean_quotes(Faker::AddressUS.street_address))
         when :city
-          clean_quotes(Faker::Address.city)
+          clean_quotes(Faker::AddressUS.city)
         when :state
-          Faker::Address.state_abbr
+          Faker::AddressUS.state_abbr
         when :zip_code
-          Faker::Address.zip_code
+          Faker::AddressUS.zip_code
         when :phone
           Faker::PhoneNumber.phone_number
         when :company
@@ -138,9 +138,12 @@ class MyObfuscate
         when :ipv4
           Faker::Internet.ip_v4_address
         when :ipv6
-          Faker::Internet.ip_v6_address
+          # Inlined from Faker because ffaker doesn't have ipv6.
+          @@ip_v6_space ||= (0..65535).to_a
+          container = (1..8).map{ |_| @@ip_v6_space.sample }
+          container.map{ |n| n.to_s(16) }.join(':')
         when :url
-          clean_bad_whitespace(Faker::Internet.url)
+          clean_bad_whitespace(Faker::Internet.http_url)
         when :integer
           random_integer(definition[:between] || (0..1000)).to_s
         when :fixed
