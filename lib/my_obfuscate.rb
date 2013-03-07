@@ -117,7 +117,7 @@ class MyObfuscate
         when :lorem
           clean_bad_whitespace(clean_quotes(Faker::Lorem.sentences(definition[:number] || 1).join(".  ")))
         when :like_english
-          random_english_sentences(definition[:number] || 1)
+          clean_quotes random_english_sentences(definition[:number] || 1)
         when :name
           clean_quotes(Faker::Name.name)
         when :first_name
@@ -131,11 +131,11 @@ class MyObfuscate
         when :city
           clean_quotes(Faker::AddressUS.city)
         when :state
-          Faker::AddressUS.state_abbr
+          clean_quotes Faker::AddressUS.state_abbr
         when :zip_code
           Faker::AddressUS.zip_code
         when :phone
-          Faker::PhoneNumber.phone_number
+          clean_quotes Faker::PhoneNumber.phone_number
         when :company
           clean_bad_whitespace(clean_quotes(Faker::Company.name))
         when :ipv4
@@ -178,7 +178,7 @@ class MyObfuscate
     times.times { out << chars[rand * chars.length] }
     out
   end
-  
+
   def self.random_english_sentences(num)
     @@walker_method ||= begin
       words, counts = [], []
@@ -189,7 +189,7 @@ class MyObfuscate
       end
       WalkerMethod.new(words, counts)
     end
-    
+
     sentences = []
     num.times do
       words = []
