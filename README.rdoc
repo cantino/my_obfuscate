@@ -1,6 +1,6 @@
 = MyObfuscate
 
-You want to develop against real production data, but you don't want to violate your users' privacy.  Enter MyObfuscate: standalone Ruby code for the selective rewriting of SQL dumps in order to protect user privacy.  It supports MySQL and SQL Server.
+You want to develop against real production data, but you don't want to violate your users' privacy.  Enter MyObfuscate: standalone Ruby code for the selective rewriting of SQL dumps in order to protect user privacy.  It supports MySQL, Postgres, and SQL Server.
 
 = Install
 
@@ -62,6 +62,7 @@ By default the database type is assumed to be MySQL, but you can use the
 builtin SQL Server support by specifying:
 
     obfuscator.database_type = :sql_server
+    obfuscator.database_type = :postgres
 
 == Types
 
@@ -70,6 +71,7 @@ zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
 
 == Changes
 
+* Support for Postgres.  Thanks @samuelreh!
 * Support for SQL Server
 * :unless and :if now support :nil as a shorthand for a Proc that checks for nil
 * :name, :lorem, and :address are all now supported types.  You can pass :number to :lorem to specify how many sentences to generate.  The default is one.
