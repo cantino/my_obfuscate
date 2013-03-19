@@ -1,9 +1,8 @@
 class MyObfuscate
   class SqlServer
-    INSERT_REGEX = /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES\s*/i
 
     def parse_insert_statement(line)
-      if regex_match = INSERT_REGEX.match(line)
+      if regex_match = insert_regex.match(line)
         {
             :table_name => regex_match[1].to_sym,
             :column_names => regex_match[2].split(/\]\s*,\s*\[/).map { |col| col.gsub(/[\[\]]/, "").to_sym }
@@ -12,7 +11,7 @@ class MyObfuscate
     end
 
     def rows_to_be_inserted(line)
-      line = line.gsub(INSERT_REGEX, '').gsub(/\s*;?\s*$/, '').gsub(/^\(/, '').gsub(/\)$/, '')
+      line = line.gsub(insert_regex, '').gsub(/\s*;?\s*$/, '').gsub(/^\(/, '').gsub(/\)$/, '')
       context_aware_sql_server_string_split(line)
     end
 
@@ -31,6 +30,10 @@ class MyObfuscate
     end
 
     private
+
+    def insert_regex
+      /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES\s*/i
+    end
 
     def context_aware_sql_server_string_split(string)
       in_quoted_string = false

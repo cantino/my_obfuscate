@@ -1,20 +1,4 @@
-require 'spec_helper'
-
-describe MyObfuscate::Mysql do
-  describe "#parse_insert_statement" do
-    it "should return nil for other SQL syntaxes (MS SQL Server)" do
-      subject.parse_insert_statement("INSERT [dbo].[TASKS] ([TaskID], [TaskName]) VALUES (61, N'Report Thing')").should be_nil
-    end
-
-    it "should return nil for MySQL non-insert statements" do
-      subject.parse_insert_statement("CREATE TABLE `some_table`;").should be_nil
-    end
-
-    it "should return a hash of table name, column names for MySQL insert statements" do
-      hash = subject.parse_insert_statement("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);")
-      hash.should == {:table_name => :some_table, :column_names => [:email, :name, :something, :age]}
-    end
-  end
+shared_examples MyObfuscate::DatabaseHelperShared do
 
   describe "#rows_to_be_inserted" do
     it "should split a mysql string into fields" do
@@ -75,4 +59,5 @@ describe MyObfuscate::Mysql do
       subject.make_valid_value_string(value).should == "'hello world'"
     end
   end
+
 end

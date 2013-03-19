@@ -26,6 +26,8 @@ class MyObfuscate
     if @database_helper.nil?
       if @database_type == :sql_server
         @database_helper = SqlServer.new
+      elsif @database_type == :postgres
+        @database_helper = Postgres.new
       else
         @database_helper = Mysql.new
       end
@@ -247,5 +249,7 @@ class MyObfuscate
   end
 end
 
+require 'my_obfuscate/database_helper_shared'
 require 'my_obfuscate/mysql'
 require 'my_obfuscate/sql_server'
+require 'my_obfuscate/postgres'
