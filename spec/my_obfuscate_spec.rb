@@ -25,9 +25,11 @@ describe MyObfuscate do
 
   describe "MyObfuscate.apply_table_config" do
     it "should work on email addresses" do
-      new_row = MyObfuscate.apply_table_config(["blah", "something_else"], {:a => {:type => :email}}, [:a, :b])
-      new_row.length.should == 2
-      new_row.first.should =~ /^[\w\.]+\@\w+\.\w+\.[a-f0-9]{5}\.example\.com$/
+      100.times do
+        new_row = MyObfuscate.apply_table_config(["blah", "something_else"], {:a => {:type => :email}}, [:a, :b])
+        new_row.length.should == 2
+        new_row.first.should =~ /^[\w\.]+\@(\w+\.){2,3}[a-f0-9]{5}\.example\.com$/
+      end
     end
 
     it "should work on strings" do
@@ -557,12 +559,12 @@ describe MyObfuscate do
       end
     end
   end
-  
+
   describe "MyObfuscate.random_english_sentences" do
     before do
       File.should_receive(:read).once.and_return("hello 2")
     end
-    
+
     after do
       MyObfuscate.class_variable_set(:@@walker_method, nil)
     end
