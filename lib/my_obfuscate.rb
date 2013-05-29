@@ -39,10 +39,14 @@ class MyObfuscate
   # Read an input stream and dump out an obfuscated output stream.  These streams could be StringIO objects, Files,
   # or STDIN and STDOUT.
   def obfuscate(input_io, output_io)
+    overflow = ""
 
-    # We assume that every INSERT INTO line occupies one line in the file, with no internal linebreaks.
     input_io.each do |line|
-      if table_data = database_helper.parse_insert_statement(line)
+      line = overflow + line
+      overflow = ""
+
+      if database_helper.insert_regex =~ line
+        table_data = database_helper.parse_insert_statement(line)
         table_name = table_data[:table_name]
         columns = table_data[:column_names]
         if config[table_name]
@@ -51,6 +55,8 @@ class MyObfuscate
           $stderr.puts "Deprecated: #{table_name} was not specified in the config.  A future release will cause this to be an error.  Please specify the table definition or set it to :keep."
           output_io.write line
         end
+      elsif database_helper.partial_insert_regex =~ line
+        overflow = line
       else
         output_io.write line
       end

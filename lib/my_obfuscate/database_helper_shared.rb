@@ -1,8 +1,16 @@
 class MyObfuscate
   module DatabaseHelperShared
 
+    def partial_insert_regex
+      /^\s*INSERT/i
+    end
+
+    def values_regex
+      /VALUES\s*(.*);/im
+    end
+
     def rows_to_be_inserted(line)
-      line = line.gsub(insert_regex, '').gsub(/\s*;\s*$/, '')
+      line = values_regex.match(line)[1]
       context_aware_mysql_string_split(line)
     end
 

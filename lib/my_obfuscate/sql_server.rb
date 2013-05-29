@@ -1,6 +1,14 @@
 class MyObfuscate
   class SqlServer
 
+    def partial_insert_regex
+      /^\s*INSERT/i
+    end
+
+    def values_regex
+      /VALUES\s*\((.*)\)\s*;/im
+    end
+
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
         {
@@ -11,7 +19,7 @@ class MyObfuscate
     end
 
     def rows_to_be_inserted(line)
-      line = line.gsub(insert_regex, '').gsub(/\s*;?\s*$/, '').gsub(/^\(/, '').gsub(/\)$/, '')
+      line = values_regex.match(line)[1]
       context_aware_sql_server_string_split(line)
     end
 
@@ -29,11 +37,11 @@ class MyObfuscate
       "INSERT [dbo].[#{table_name}] ([#{column_names.join("], [")}]) VALUES #{values_strings};"
     end
 
-    private
-
     def insert_regex
-      /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES\s*/i
+      /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES.*;\s*/im
     end
+
+    private
 
     def context_aware_sql_server_string_split(string)
       in_quoted_string = false
