@@ -3,7 +3,7 @@ require 'spec_helper'
 describe MyObfuscate::SqlServer do
   describe "#parse_insert_statement" do
     it "should return a hash of table_name, column_names for SQL Server input statements" do
-      hash = subject.parse_insert_statement("INSERT [dbo].[TASKS] ([TaskID], [TaskName]) VALUES (61, N'Report Thing')")
+      hash = subject.parse_insert_statement("INSERT [dbo].[TASKS] ([TaskID], [TaskName]) VALUES (61, N'Report Thing');")
       hash.should == { :table_name => :TASKS, :column_names => [:TaskID, :TaskName] }
     end
 
