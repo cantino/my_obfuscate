@@ -195,7 +195,7 @@ class MyObfuscate
     sentences = []
     num.times do
       words = []
-      (5 + rand * 6).to_i.times { words << @@walker_method.random }
+      (3 + rand * 5).to_i.times { words << @@walker_method.random }
       sentences << words.join(" ") + "."
       sentences.last[0] = sentences.last[0].upcase
     end
