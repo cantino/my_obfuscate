@@ -79,7 +79,7 @@ zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
 * :name, :lorem, and :address are all now supported types.  You can pass :number to :lorem to specify how many sentences to generate.  The default is one.
 * <tt>{ :type => :whatever }</tt> is now optional when no additional options are needed.  Just use <tt>:whatever</tt>.
 * Warnings are thrown when an unknown column type or table is encountered.  Use <tt>:keep</tt> in both cases.
-* <tt>{ :type => :fixed, :string => Proc { |row| ... } }</tt> is now available.
+* <tt>{ :type => :fixed, :string => Proc.new { |row| ... } }</tt> is now available.
 
 == Note on Patches/Pull Requests
 

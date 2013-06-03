@@ -1,8 +1,16 @@
 class MyObfuscate
   module DatabaseHelperShared
 
+    def partial_insert_regex
+      /^\s*INSERT/i
+    end
+
+    def values_regex
+      /VALUES\s*(.*);/im
+    end
+
     def rows_to_be_inserted(line)
-      line = line.gsub(insert_regex, '').gsub(/\s*;\s*$/, '')
+      line = values_regex.match(line)[1]
       context_aware_mysql_string_split(line)
     end
 
@@ -22,7 +30,9 @@ class MyObfuscate
       in_quoted_string = false
       escaped = false
       current_field = nil
+      current_field_quote_count = 0
       length = string.length
+      index = 0
       fields = []
       output = []
 
@@ -49,9 +59,18 @@ class MyObfuscate
             current_field = ''
             in_quoted_string = true
           elsif i == "'" && in_quoted_string
-            fields << current_field unless current_field.nil?
-            current_field = nil
-            in_quoted_string = false
+            if string[index+1] == i
+              current_field << i
+              current_field_quote_count += 1
+            elsif string[index-1] == i && current_field_quote_count.odd?
+              current_field << i
+              current_field_quote_count += 1
+            else
+              fields << current_field unless current_field.nil?
+              current_field = nil
+              in_quoted_string = false
+              current_field_quote_count = 0
+            end
           elsif i == "," && !in_quoted_string && in_sub_insert
             fields << current_field unless current_field.nil?
             current_field = nil
@@ -65,6 +84,7 @@ class MyObfuscate
             current_field << i
           end
         end
+        index += 1
       end
 
       fields << current_field unless current_field.nil?
