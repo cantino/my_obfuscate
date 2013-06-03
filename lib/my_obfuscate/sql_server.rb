@@ -38,7 +38,7 @@ class MyObfuscate
     end
 
     def insert_regex
-      /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES.*;\s*/im
+      /^\s*INSERT (?:INTO )?\[dbo\]\.\[(.*?)\] \((.*?)\) VALUES.*;/im
     end
 
     private

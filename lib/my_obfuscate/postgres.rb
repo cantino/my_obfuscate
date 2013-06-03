@@ -16,7 +16,7 @@ class MyObfuscate
     end
 
     def insert_regex
-      /^\s*INSERT INTO (.*?) \((.*?)\) VALUES.*;.*/im
+      /^\s*INSERT INTO (.*?) \((.*?)\) VALUES.*;/im
     end
 
   end
