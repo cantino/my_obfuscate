@@ -1,23 +1,28 @@
 require 'spec_helper'
-require 'my_obfuscate/database_helper_shared_examples'
 
 describe MyObfuscate::Postgres do
 
-  it_behaves_like MyObfuscate::DatabaseHelperShared
+  let(:helper) { MyObfuscate::Postgres.new }
 
-  describe "#parse_insert_statement" do
-    it "should return nil for other SQL syntaxes (MS SQL Server)" do
-      subject.parse_insert_statement("INSERT [dbo].[TASKS] ([TaskID], [TaskName]) VALUES (61, N'Report Thing')").should be_nil
-    end
-
-    it "should return nil for MySQL non-insert statements" do
-      subject.parse_insert_statement("CREATE TABLE `some_table`;").should be_nil
-    end
-
-    it "should return a hash of table name, column names for MySQL insert statements" do
-      hash = subject.parse_insert_statement("INSERT INTO some_table (email, name, something, age) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);")
-      hash.should == {:table_name => :some_table, :column_names => [:email, :name, :something, :age]}
+  describe "#rows_to_be_inserted" do
+    it 'splits tab seperated values' do
+      line = "1	2	3	4"
+      helper.rows_to_be_inserted(line).should == [["1","2","3","4"]]
     end
   end
 
+  describe "#parse_copy_statement" do
+    it 'parses table name and column names' do
+      line = "COPY some_table (id, email, name, something) FROM stdin;"
+      hash = helper.parse_copy_statement(line)
+      hash[:table_name].should == :some_table
+      hash[:column_names].should == [:id, :email, :name, :something]
+    end
+  end
+
+  describe "#make_insert_statement" do
+    it 'creates a string with tab delminted' do
+      helper.make_insert_statement(:some_table, [:id, :name], ['1', '2']).should == "1	2"
+    end
+  end
 end
