@@ -66,6 +66,10 @@ builtin SQL Server support by specifying:
     obfuscator.database_type = :sql_server
     obfuscator.database_type = :postgres
 
+If using Postgres, use pg_dump to get a dump:
+
+    pg_dump database | ruby obfuscator.rb > obfuscated_dump.sql
+
 == Types
 
 Available types include: email, string, lorem, name, first_name, last_name, address, street_address, city, state,
