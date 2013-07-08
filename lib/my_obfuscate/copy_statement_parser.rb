@@ -16,7 +16,9 @@ class MyObfuscate
       inside_copy_statement = false
 
       input_io.each do |line|
-        if table_data = parse_copy_statement(line)
+        if parse_insert_statement(line)
+          raise RuntimeError.new("Cannot obfuscate Postgres dumps containing INSERT statements. Please use COPY statments.")
+        elsif table_data = parse_copy_statement(line)
           inside_copy_statement = true
 
           current_table_name = table_data[:table_name]

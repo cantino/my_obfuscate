@@ -60,16 +60,16 @@ describe MyObfuscate do
           },
           :another_table => :truncate,
           :some_table_to_keep => :keep
-        })
+        }).tap do |obfuscator|
+          obfuscator.database_type = :postgres
+        end
       end
 
-      let(:output) { StringIO.new }
-      let(:output_string) { output.read }
-
-      before do
-        obfuscator.database_type = :postgres
+      let(:output_string) do
+        output = StringIO.new
         obfuscator.obfuscate(dump, output)
         output.rewind
+        output.read
       end
 
       it "is able to obfuscate single column tables" do
@@ -88,6 +88,18 @@ describe MyObfuscate do
 
       it "is able to keep tables" do
         output_string.should include("5\t6")
+      end
+
+      context "when dump contains statement" do
+        let(:dump) do
+          StringIO.new(<<-SQL)
+          INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);
+          SQL
+        end
+
+        it "raises an error if using postgres with insert statements" do
+          expect { output_string }.to raise_error RuntimeError
+        end
       end
     end
 

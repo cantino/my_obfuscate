@@ -34,5 +34,9 @@ class MyObfuscate
       end
     end
 
+    def parse_insert_statement(line)
+      /^\s*INSERT INTO/i.match(line)
+    end
+
   end
 end
