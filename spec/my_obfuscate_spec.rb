@@ -28,23 +28,24 @@ describe MyObfuscate do
     describe "when using Postgres" do
       let(:dump) do
         StringIO.new(<<-SQL)
-        COPY some_table (id, email, name, something, age) FROM stdin;
-        1	hello	monkey	moose	14
-        \.
+COPY some_table (id, email, name, something, age) FROM stdin;
+1	hello	monkey	moose	14
+\.
 
-        COPY single_column_table (id) FROM stdin;
-        1
-        2
-        \.
+COPY single_column_table (id) FROM stdin;
+1
+2
+\\N
+\.
 
-        COPY another_table (a, b, c, d) FROM stdin;
-        1	2	3	4
-        1	2	3	4
-        \.
+COPY another_table (a, b, c, d) FROM stdin;
+1	2	3	4
+1	2	3	4
+\.
 
-        COPY some_table_to_keep (a, b) FROM stdin;
-        5	6
-        \.
+COPY some_table_to_keep (a, b) FROM stdin;
+5	6
+\.
         SQL
       end
 
@@ -53,10 +54,10 @@ describe MyObfuscate do
           :some_table => {
             :email => {:type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/]},
             :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
-            :age => {:type => :integer, :between => 10...80}
+            :age => {:type => :integer, :between => 10...80, :unless => :nil },
           },
           :single_column_table => {
-            :id => {:type => :integer, :between => 1...8}
+            :id => {:type => :integer, :between => 1...8, :unless => :nil}
           },
           :another_table => :truncate,
           :some_table_to_keep => :keep
@@ -86,11 +87,15 @@ describe MyObfuscate do
         output_string.should match(/1\t.*\t\S{8}\tmoose\t\d{2}\n/)
       end
 
+      it "can skip nils" do
+        output_string.should match(/\d\n\d\n\\N/)
+      end
+
       it "is able to keep tables" do
         output_string.should include("5\t6")
       end
 
-      context "when dump contains statement" do
+      context "when dump contains INSERT statement" do
         let(:dump) do
           StringIO.new(<<-SQL)
           INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);

@@ -10,7 +10,18 @@ class MyObfuscate
     # We wrap it in an array to keep it consistent with MySql bulk
     # obfuscation (multiple rows per insert statement)
     def rows_to_be_inserted(line)
-      [line.split(/\t/)]
+      line = line[0..-2]
+      row = line.split(/\t/)
+
+      row.collect! do |value|
+        if value == "\\N"
+          nil
+        else
+          value
+        end
+      end
+
+      [row]
     end
 
     def parse_copy_statement(line)
@@ -28,7 +39,7 @@ class MyObfuscate
 
     def make_valid_value_string(value)
       if value.nil?
-        "\N"
+        "\\N"
       else
         value
       end
