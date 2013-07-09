@@ -9,6 +9,21 @@ describe MyObfuscate::Postgres do
       line = "1	2	3	4"
       helper.rows_to_be_inserted(line).should == [["1","2","3","4"]]
     end
+
+    it 'ignores the newline character at the end of string' do
+      line = "1	2	3	4\n"
+      helper.rows_to_be_inserted(line).should == [["1","2","3","4"]]
+    end
+
+    it "doesn't ignore newline characters in the string" do
+      line = "1	2	3\n4	5"
+      helper.rows_to_be_inserted(line).should == [["1","2","3\n4","5"]]
+    end
+
+    it "replaces \\N with nil" do
+      line = "1	2	\\N	4"
+      helper.rows_to_be_inserted(line).should == [["1","2",nil,"4"]]
+    end
   end
 
   describe "#parse_copy_statement" do
