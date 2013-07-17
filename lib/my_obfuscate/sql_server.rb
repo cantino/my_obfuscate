@@ -1,5 +1,6 @@
 class MyObfuscate
   class SqlServer
+    include MyObfuscate::InsertStatementParser
 
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
@@ -25,7 +26,11 @@ class MyObfuscate
       end
     end
 
-    def make_insert_statement(table_name, column_names, values_strings)
+    def make_insert_statement(table_name, column_names, values)
+      values_strings = values.collect do |values|
+        "(" + values.join(",") + ")"
+      end.join(",")
+
       "INSERT [dbo].[#{table_name}] ([#{column_names.join("], [")}]) VALUES #{values_strings};"
     end
 
