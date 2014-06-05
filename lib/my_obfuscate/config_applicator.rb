@@ -116,7 +116,7 @@ class MyObfuscate
     def self.random_english_sentences(num)
       @@walker_method ||= begin
         words, counts = [], []
-        File.read(File.expand_path(File.join(File.dirname(__FILE__), 'my_obfuscate', 'data', 'en_50K.txt'))).each_line do |line|
+        File.read(File.expand_path(File.join(File.dirname(__FILE__), 'data', 'en_50K.txt'))).each_line do |line|
           word, count = line.split(/\s+/)
           words << word
           counts << count.to_i
