@@ -57,7 +57,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
             :age => {:type => :integer, :between => 10...80, :unless => :nil },
           },
           :single_column_table => {
-            :id => {:type => :integer, :between => 1...8, :unless => :nil}
+            :id => {:type => :integer, :between => 2..9, :unless => :nil}
           },
           :another_table => :truncate,
           :some_table_to_keep => :keep
