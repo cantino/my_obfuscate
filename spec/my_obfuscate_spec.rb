@@ -14,12 +14,12 @@ describe MyObfuscate do
     it "should yield each subinsert and reassemble the result" do
       count = 0
       reassembled = MyObfuscate.new.reassembling_each_insert(@test_insert, "some_table", @column_names) do |sub_insert|
-        sub_insert.should == @test_insert_passes.shift
+        expect(sub_insert).to eq(@test_insert_passes.shift)
         count += 1
         sub_insert
       end
-      count.should == 2
-      reassembled.should == @test_insert
+      expect(count).to eq(2)
+      expect(reassembled).to eq(@test_insert)
     end
   end
 
@@ -74,25 +74,25 @@ COPY some_table_to_keep (a, b) FROM stdin;
       end
 
       it "is able to obfuscate single column tables" do
-        output_string.should_not include("1\n2\n")
-        output_string.should match(/\d\n\d\n/)
+        expect(output_string).not_to include("1\n2\n")
+        expect(output_string).to match(/\d\n\d\n/)
       end
 
       it "is able to truncate tables" do
-        output_string.should_not include("1\t2\t3\t4")
+        expect(output_string).not_to include("1\t2\t3\t4")
       end
 
       it "can obfuscate the tables" do
-        output_string.should include("COPY some_table (id, email, name, something, age) FROM stdin;\n")
-        output_string.should match(/1\t.*\t\S{8}\tmoose\t\d{2}\n/)
+        expect(output_string).to include("COPY some_table (id, email, name, something, age) FROM stdin;\n")
+        expect(output_string).to match(/1\t.*\t\S{8}\tmoose\t\d{2}\n/)
       end
 
       it "can skip nils" do
-        output_string.should match(/\d\n\d\n\\N/)
+        expect(output_string).to match(/\d\n\d\n\\N/)
       end
 
       it "is able to keep tables" do
-        output_string.should include("5\t6")
+        expect(output_string).to include("5\t6")
       end
 
       context "when dump contains INSERT statement" do
@@ -118,7 +118,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
           ddo.obfuscate(input, output)
           input.rewind
           output.rewind
-          output.read.should == string
+          expect(output.read).to eq(string)
         end
       end
 
@@ -137,9 +137,9 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should raise an error if a column name can't be found" do
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, @output)
-          }.should raise_error
+          }.to raise_error
         end
       end
 
@@ -176,35 +176,35 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should be able to truncate tables" do
-          @output_string.should_not include("INSERT INTO `another_table`")
-          @output_string.should include("INSERT INTO `one_more_table`")
+          expect(@output_string).not_to include("INSERT INTO `another_table`")
+          expect(@output_string).to include("INSERT INTO `one_more_table`")
         end
 
         it "should be able to declare tables to keep" do
-          @output_string.should include("INSERT INTO `some_table_to_keep` (`a`, `b`, `c`, `d`) VALUES (1,2,3,4), (5,6,7,8);")
+          expect(@output_string).to include("INSERT INTO `some_table_to_keep` (`a`, `b`, `c`, `d`) VALUES (1,2,3,4), (5,6,7,8);")
         end
 
         it "should ignore tables that it doesn't know about, but should warn" do
-          @output_string.should include("INSERT INTO `an_ignored_table` (`col`, `col2`) VALUES ('hello','kjhjd^&dkjh'), ('hello1','kjhj!'), ('hello2','moose!!');")
+          expect(@output_string).to include("INSERT INTO `an_ignored_table` (`col`, `col2`) VALUES ('hello','kjhjd^&dkjh'), ('hello1','kjhj!'), ('hello2','moose!!');")
           @error_output.rewind
-          @error_output.read.should =~ /an_ignored_table was not specified in the config/
+          expect(@error_output.read).to match(/an_ignored_table was not specified in the config/)
         end
 
         it "should obfuscate the tables" do
-          @output_string.should include("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES (")
-          @output_string.should include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES (")
-          @output_string.should include("'some\\'thin,ge())lse1'")
-          @output_string.should include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','monkey',NULL),('hello1','monkey',NULL),('hello2','monkey',NULL);")
-          @output_string.should_not include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','kjhjd^&dkjh', 'aawefjkafe'), ('hello1','kjhj!', 892938), ('hello2','moose!!', NULL);")
-          @output_string.should_not include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','kjhjd^&dkjh','aawefjkafe'),('hello1','kjhj!',892938),('hello2','moose!!',NULL);")
-          @output_string.should_not include("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);")
+          expect(@output_string).to include("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES (")
+          expect(@output_string).to include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES (")
+          expect(@output_string).to include("'some\\'thin,ge())lse1'")
+          expect(@output_string).to include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','monkey',NULL),('hello1','monkey',NULL),('hello2','monkey',NULL);")
+          expect(@output_string).not_to include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','kjhjd^&dkjh', 'aawefjkafe'), ('hello1','kjhj!', 892938), ('hello2','moose!!', NULL);")
+          expect(@output_string).not_to include("INSERT INTO `one_more_table` (`a`, `password`, `c`, `d,d`) VALUES ('hello','kjhjd^&dkjh','aawefjkafe'),('hello1','kjhj!',892938),('hello2','moose!!',NULL);")
+          expect(@output_string).not_to include("INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);")
         end
 
         it "honors a special case: on the people table, rows with skip_regexes that match are skipped" do
-          @output_string.should include("('bob@honk.com',")
-          @output_string.should include("('dontmurderme@direwolf.com',")
-          @output_string.should_not include("joe@joe.com")
-          @output_string.should include("example.com")
+          expect(@output_string).to include("('bob@honk.com',")
+          expect(@output_string).to include("('dontmurderme@direwolf.com',")
+          expect(@output_string).not_to include("joe@joe.com")
+          expect(@output_string).to include("example.com")
         end
       end
 
@@ -225,16 +225,16 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should raise an exception when an unspecified column is found" do
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, StringIO.new)
-          }.should raise_error(/column 'something' defined/i)
+          }.to raise_error(/column 'something' defined/i)
         end
 
         it "should accept columns defined in globally_kept_columns" do
           @ddo.globally_kept_columns = %w[something]
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, StringIO.new)
-          }.should_not raise_error
+          }.not_to raise_error
         end
       end
     end
@@ -250,7 +250,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
           ddo.obfuscate(input, output)
           input.rewind
           output.rewind
-          output.read.should == string
+          expect(output.read).to eq(string)
         end
       end
 
@@ -270,9 +270,9 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should raise an error if a column name can't be found" do
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, @output)
-          }.should raise_error
+          }.to raise_error
         end
       end
 
@@ -320,42 +320,42 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should be able to truncate tables" do
-          @output_string.should_not include("INSERT [dbo].[another_table]")
-          @output_string.should include("INSERT [dbo].[one_more_table]")
+          expect(@output_string).not_to include("INSERT [dbo].[another_table]")
+          expect(@output_string).to include("INSERT [dbo].[one_more_table]")
         end
 
         it "should be able to declare tables to keep" do
-          @output_string.should include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (1,2,3,4);")
-          @output_string.should include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (5,6,7,8);")
+          expect(@output_string).to include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (1,2,3,4);")
+          expect(@output_string).to include("INSERT [dbo].[some_table_to_keep] ([a], [b], [c], [d]) VALUES (5,6,7,8);")
         end
 
         it "should ignore tables that it doesn't know about, but should warn" do
-          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello',N'kjhjd^&dkjh');")
-          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello1',N'kjhj!');")
-          @output_string.should include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello2',N'moose!!');")
+          expect(@output_string).to include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello',N'kjhjd^&dkjh');")
+          expect(@output_string).to include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello1',N'kjhj!');")
+          expect(@output_string).to include("INSERT [dbo].[an_ignored_table] ([col], [col2]) VALUES (N'hello2',N'moose!!');")
           @error_output.rewind
-          @error_output.read.should =~ /an_ignored_table was not specified in the config/
+          expect(@error_output.read).to match(/an_ignored_table was not specified in the config/)
         end
 
         it "should obfuscate the tables" do
-          @output_string.should include("INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (")
-          @output_string.should include("CAST(0x00009E1A00000000 AS DATETIME)")
-          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (")
-          @output_string.should include("'some''thin,ge())lse1'")
-          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'monkey',NULL);")
-          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'monkey',NULL);")
-          @output_string.should include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'monkey',NULL);")
-          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'kjhjd^&dkjh', N'aawefjkafe');")
-          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'kjhj!', 892938);")
-          @output_string.should_not include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'moose!!', NULL);")
-          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25, CAST(0x00009E1A00000000 AS DATETIME));")
-          @output_string.should_not include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54, CAST(0x00009E1A00000000 AS DATETIME));")
+          expect(@output_string).to include("INSERT [dbo].[some_table] ([email], [name], [something], [age], [bday]) VALUES (")
+          expect(@output_string).to include("CAST(0x00009E1A00000000 AS DATETIME)")
+          expect(@output_string).to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (")
+          expect(@output_string).to include("'some''thin,ge())lse1'")
+          expect(@output_string).to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'monkey',NULL);")
+          expect(@output_string).to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'monkey',NULL);")
+          expect(@output_string).to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'monkey',NULL);")
+          expect(@output_string).not_to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello',N'kjhjd^&dkjh', N'aawefjkafe');")
+          expect(@output_string).not_to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello1',N'kjhj!', 892938);")
+          expect(@output_string).not_to include("INSERT [dbo].[one_more_table] ([a], [password], [c], [d,d]) VALUES (N'hello2',N'moose!!', NULL);")
+          expect(@output_string).not_to include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'bob@honk.com',N'bob', N'some''thin,ge())lse1', 25, CAST(0x00009E1A00000000 AS DATETIME));")
+          expect(@output_string).not_to include("INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES (N'joe@joe.com',N'joe', N'somethingelse2', 54, CAST(0x00009E1A00000000 AS DATETIME));")
         end
 
         it "honors a special case: on the people table, rows with anything@honk.com in a slot marked with :honk_email_skip do not change this slot" do
-          @output_string.should include("(N'bob@honk.com',")
-          @output_string.should include("(N'dontmurderme@direwolf.com',")
-          @output_string.should_not include("joe@joe.com")
+          expect(@output_string).to include("(N'bob@honk.com',")
+          expect(@output_string).to include("(N'dontmurderme@direwolf.com',")
+          expect(@output_string).not_to include("joe@joe.com")
         end
       end
 
@@ -377,16 +377,16 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should raise an exception when an unspecified column is found" do
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, StringIO.new)
-          }.should raise_error(/column 'something' defined/i)
+          }.to raise_error(/column 'something' defined/i)
         end
 
         it "should accept columns defined in globally_kept_columns" do
           @ddo.globally_kept_columns = %w[something]
-          lambda {
+          expect {
             @ddo.obfuscate(@database_dump, StringIO.new)
-          }.should_not raise_error
+          }.not_to raise_error
         end
       end
     end
