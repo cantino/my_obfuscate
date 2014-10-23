@@ -10,6 +10,11 @@ describe MyObfuscate::Postgres do
       expect(helper.rows_to_be_inserted(line)).to eq([["1","2","3","4"]])
     end
 
+    it "preserves empty strings at the end of a line" do
+      line = "1	2	3	4	"
+      expect(helper.rows_to_be_inserted(line)).to eq([["1","2","3","4",""]])
+    end
+
     it 'ignores the newline character at the end of string' do
       line = "1	2	3	4\n"
       expect(helper.rows_to_be_inserted(line)).to eq([["1","2","3","4"]])
