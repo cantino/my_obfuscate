@@ -1,2 +1,3 @@
+10/24/2014 - Postgres handles empty trailing fields.
 7/17/2013 - Switch Postgres to use COPY statements and refactor internals.  Thanks @samuelreh!
 3/4/2013 - Switch to the ffaker gem for speed.  Add WalkerMethod and an English language frequency dictionary for generating random texts.
