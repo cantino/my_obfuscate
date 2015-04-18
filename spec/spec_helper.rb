@@ -6,5 +6,5 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'my_obfuscate'
 
 RSpec.configure do |config|
-#  config.mock_with :rr
+ config.mock_with :rspec
 end

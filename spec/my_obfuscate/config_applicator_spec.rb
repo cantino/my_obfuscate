@@ -232,11 +232,11 @@ describe MyObfuscate::ConfigApplicator do
 
     describe "when faker generates values with quotes in them" do
       before do
-        allow(Faker::Address).to receive(:city).and_return("O'ReillyTown")
-        allow(Faker::Name).to receive(:name).and_return("Foo O'Reilly")
-        allow(Faker::Name).to receive(:first_name).and_return("O'Foo")
-        allow(Faker::Name).to receive(:last_name).and_return("O'Reilly")
-        allow(Faker::Lorem).to receive(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
+        allow(FFaker::Address).to receive(:city).and_return("O'ReillyTown")
+        allow(FFaker::Name).to receive(:name).and_return("Foo O'Reilly")
+        allow(FFaker::Name).to receive(:first_name).and_return("O'Foo")
+        allow(FFaker::Name).to receive(:last_name).and_return("O'Reilly")
+        allow(FFaker::Lorem).to receive(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
       end
 
       it "should remove single quotes from the value" do
