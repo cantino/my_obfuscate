@@ -1,6 +1,7 @@
 class MyObfuscate
   class Postgres
     include MyObfuscate::CopyStatementParser
+    include MyObfuscate::ConfigScaffoldGenerator
 
     # Copy statements contain the column values tab separated like so:
     #   blah	blah	blah	blah

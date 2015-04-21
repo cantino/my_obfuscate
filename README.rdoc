@@ -72,8 +72,33 @@ If using Postgres, use pg_dump to get a dump:
 
 == Types
 
-Available types include: email, string, lorem, name, first_name, last_name, address, street_address, city, state,
+Available types include: email, string, lorem, name, first_name, last_name, address, street_address, secondary_address, city, state,
 zip_code, phone, company, ipv4, ipv6, url, integer, fixed, null, and keep.
+
+== Helping with creation of the "obfuscator.rb" script
+
+If you don't want to type all those table names and column names into your obfuscator.rb script,
+you can use my_obfuscate to do some of that work for you. It can consume your database dump file and create a "scaffold" for the script.
+To run my_obfuscate in this mode, start with an "empty" scaffolder.rb script as follows:
+
+  #!/usr/bin/env ruby
+  require "rubygems"
+  require "my_obfuscate"
+
+  obfuscator = MyObfuscate.new({})
+  obfuscator.scaffold(STDIN, STDOUT)
+
+Then feed in your database dump:
+  mysqldump -c  --hex-blob -u user -ppassword database | ruby scaffolder.rb > obfuscator_scaffold.rb_snippet
+  pg_dump database | ruby scaffolder.rb > obfuscator_scaffold.rb_snippet
+
+The output will be a series of configuration statements of the form:
+    :table_name => {
+      :column1_name     => :keep   # scaffold
+      :column2_name     => :keep   # scaffold
+  	... etc.
+    
+Scaffolding also works if you have a partial configuration.  If your configuration is missing some tables or some columns, a call to 'scaffold' will pass through the configuration that exists and augment it with scaffolding for the missing tables or columns. 
 
 == Changes
 

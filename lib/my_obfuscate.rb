@@ -6,7 +6,7 @@ require 'walker_method'
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
 # column names in the insert statements.
 class MyObfuscate
-  attr_accessor :config, :globally_kept_columns, :fail_on_unspecified_columns, :database_type
+  attr_accessor :config, :globally_kept_columns, :fail_on_unspecified_columns, :database_type, :scaffolded_tables
 
   NUMBER_CHARS = "1234567890"
   USERNAME_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_" + NUMBER_CHARS
@@ -16,6 +16,7 @@ class MyObfuscate
   # performed.  See the README.rdoc file for more information.
   def initialize(configuration = {})
     @config = configuration
+    @scaffolded_tables = {}
   end
 
   def fail_on_unspecified_columns?
@@ -42,6 +43,12 @@ class MyObfuscate
     database_helper.parse(self, config, input_io, output_io)
   end
 
+  # Read an input stream and dump out a config file scaffold.  These streams could be StringIO objects, Files,
+  # or STDIN and STDOUT.
+  def scaffold(input_io, output_io)
+    database_helper.generate_config(self, config, input_io, output_io)
+  end
+
   def reassembling_each_insert(line, table_name, columns, ignore = nil)
     output = database_helper.rows_to_be_inserted(line).map do |sub_insert|
       result = yield(sub_insert)
@@ -52,9 +59,13 @@ class MyObfuscate
     database_helper.make_insert_statement(table_name, columns, output, ignore)
   end
 
+  def extra_column_list(table_name, columns)
+    config_columns = (config[table_name] || {}).keys
+    config_columns - columns
+  end
+
   def check_for_defined_columns_not_in_table(table_name, columns)
-    return unless config[table_name]
-    missing_columns = config[table_name].keys - columns
+    missing_columns = extra_column_list(table_name, columns)
     unless missing_columns.length == 0
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
@@ -64,7 +75,8 @@ class MyObfuscate
   end
 
   def missing_column_list(table_name, columns)
-    columns - (config[table_name].keys + (globally_kept_columns || []).map {|i| i.to_sym}).uniq
+    config_columns = (config[table_name] || {}).keys
+    columns - (config_columns + (globally_kept_columns || []).map {|i| i.to_sym}).uniq
   end
 
   def check_for_table_columns_not_in_definition(table_name, columns)
@@ -97,6 +109,7 @@ end
 
 require 'my_obfuscate/copy_statement_parser'
 require 'my_obfuscate/insert_statement_parser'
+require 'my_obfuscate/config_scaffold_generator'
 require 'my_obfuscate/mysql'
 require 'my_obfuscate/sql_server'
 require 'my_obfuscate/postgres'

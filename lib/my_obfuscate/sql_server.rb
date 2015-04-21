@@ -1,6 +1,7 @@
 class MyObfuscate
   class SqlServer
     include MyObfuscate::InsertStatementParser
+    include MyObfuscate::ConfigScaffoldGenerator
 
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
