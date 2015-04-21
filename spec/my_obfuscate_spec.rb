@@ -73,6 +73,31 @@ COPY some_table_to_keep (a, b) FROM stdin;
         output.read
       end
 
+      let(:scaffolder) do
+        MyObfuscate.new({
+            :some_other_table => {
+                :email => {:type => :email, :skip_regexes => [/^[\w\.\_]+@honk\.com$/i, /^dontmurderme@direwolf.com$/]},
+                :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                :age => {:type => :integer, :between => 10...80, :unless => :nil },
+            },
+            :single_column_table => {
+                :id => {:type => :integer, :between => 2..9, :unless => :nil}
+            },
+            :another_table => :truncate,
+            :some_table_to_keep => :keep
+        }).tap do |scaffolder|
+          scaffolder.database_type = :postgres
+          scaffolder.globally_kept_columns = %w[age]
+        end
+      end
+
+      let(:scaffold_output_string) do
+        output = StringIO.new
+        scaffolder.scaffold(dump, output)
+        output.rewind
+        output.read
+      end
+
       it "is able to obfuscate single column tables" do
         expect(output_string).not_to include("1\n2\n")
         expect(output_string).to match(/\d\n\d\n/)
@@ -106,6 +131,16 @@ COPY some_table_to_keep (a, b) FROM stdin;
           expect { output_string }.to raise_error RuntimeError
         end
       end
+
+      it "when there is no existing config, should scaffold all the columns that are not globally kept" do
+        expect(scaffold_output_string).to match(/:email\s+=>\s+:keep.+scaffold/)
+        expect(scaffold_output_string).to match(/:name\s+=>\s+:keep.+scaffold/)
+      end
+
+      it "should not scaffold a columns that is globally kept" do
+        expect(scaffold_output_string).not_to match(/:age\s+=>\s+:keep.+scaffold/)
+      end
+
     end
 
     describe "when using MySQL" do
@@ -143,6 +178,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
       end
 
+
       context "when there is something to obfuscate" do
         before do
           @database_dump = StringIO.new(<<-SQL)
@@ -164,7 +200,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
                                      :one_more_table => {
                                          # Note: fixed strings must be pre-SQL escaped!
                                          :password => {:type => :fixed, :string => "monkey"},
-                                         :c => {:type => :null}
+                                         :c => {:type => :null},
                                      }
                                  })
           @output = StringIO.new
@@ -236,6 +272,184 @@ COPY some_table_to_keep (a, b) FROM stdin;
             @ddo.obfuscate(@database_dump, StringIO.new)
           }.not_to raise_error
         end
+      end
+
+      context "when there is an existing config to scaffold" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT IGNORE INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS}
+                                     },
+                                     :another_table => :truncate
+                                 })
+          @ddo.globally_kept_columns = %w[something]
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold missing columns" do
+          expect(@output_string).to match(/:age\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should not scaffold globally_kept_columns" do
+          expect(@output_string).not_to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should pass through correct columns" do
+          expect(@output_string).not_to match(/:email\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:email\s+=>/)
+          expect(@output_string).not_to match(/\#\s*:email/)
+        end
+      end
+
+      context "when using :secondary_address" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO `some_table` (`email`, `name`, `something`, `age`, `address1`, `address2`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25, '221B Baker St', 'Suite 100'),('joe@joe.com','joe', 'somethingelse2', 54, '1300 Pennsylvania Ave', '2nd floor');
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep,
+                                         :address1 => :street_address,
+                                         :address2 => :secondary_address
+                                     }})
+          @output = StringIO.new
+          @ddo.obfuscate(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should obfuscate address1" do
+          expect(@output_string).to include("address1")
+          expect(@output_string).not_to include("Baker St")
+        end
+
+        it "should obfuscate address2" do
+          expect(@output_string).to include("address2")
+          expect(@output_string).not_to include("Suite 100")
+        end
+      end
+
+      context "when there is an existing config to scaffold" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO `some_table` (`email`, `name`, `something`, `age`, `address1`, `address2`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25, '221B Baker St', 'Suite 100'),('joe@joe.com','joe', 'somethingelse2', 54, '1300 Pennsylvania Ave', '2nd floor');
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep,
+                                         :gender => {:type => :fixed, :string => "m"},
+                                         :address1 => :street_address,
+                                         :address2 => :secondary_address
+                                     }})
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should enumerate extra columns" do
+          expect(@output_string).to match(/\#\s*:gender/)
+        end
+      end
+
+      context "when there is an existing config to scaffold with both missing and extra columns" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT IGNORE INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :gender => {:type => :fixed, :string => "m"}
+                                     }})
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold missing columns" do
+          expect(@output_string).to match(/:age\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should enumerate extra columns" do
+          expect(@output_string).to match(/\#\s*:gender/)
+        end
+      end
+
+      context "when there is an existing config to scaffold and it is just right" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO `some_table` (`email`, `name`, `something`, `age`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep
+                                     }})
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should say that everything is present and accounted for" do
+          expect(@output_string).to match(/^\s*\#.*account/)
+          expect(@output_string).not_to include("scaffold")
+          expect(@output_string).not_to include(":some_table")
+        end
+      end
+
+      context "when scaffolding a table with no existing config" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT INTO `some_table` (`email`, `name`, `something`, `age_of_the_individual_who_is_specified_by_this_row_of_the_table`) VALUES ('bob@honk.com','bob', 'some\\'thin,ge())lse1', 25),('joe@joe.com','joe', 'somethingelse2', 54);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_other_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age_of_the_individual_who_is_specified_by_this_row_of_the_table => :keep
+                                     }})
+          @ddo.globally_kept_columns = %w[name]
+
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold all the columns that are not globally kept" do
+          expect(@output_string).to match(/:email\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should not scaffold globally kept columns" do
+          expect(@output_string).not_to match(/:name\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should preserve long column names" do
+          expect(@output_string).to match(/:age_of_the_individual_who_is_specified_by_this_row_of_the_table/)
+        end
+
       end
     end
 
@@ -389,6 +603,148 @@ COPY some_table_to_keep (a, b) FROM stdin;
           }.not_to raise_error
         end
       end
+
+      context "when there is an existing config to scaffold and it is missing columns" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS}
+                                     }})
+          @ddo.database_type = :sql_server
+          @ddo.globally_kept_columns = %w[something]
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold columns that can't be found" do
+          expect(@output_string).to match(/:age\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should not scaffold globally_kept_columns" do
+          expect(@output_string).not_to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+      end
+
+      context "when there is an existing config to scaffold and it has extra columns" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep,
+                                         :gender => {:type => :fixed, :string => "m"}
+                                     }})
+          @ddo.database_type = :sql_server
+
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should enumerate extra columns" do
+          expect(@output_string).to match(/\#\s*:gender/)
+        end
+      end
+
+      context "when there is an existing config to scaffold and it has both missing and extra columns" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :gender => {:type => :fixed, :string => "m"}
+                                     }})
+          @ddo.database_type = :sql_server
+
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold columns that can't be found" do
+          expect(@output_string).to match(/:age\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should enumerate extra columns" do
+          expect(@output_string).to match(/\#\s*:gender/)
+        end
+      end
+
+      context "when there is an existing config to scaffold and it is just right" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep
+                                     }})
+          @ddo.database_type = :sql_server
+
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should say that everything is present and accounted for" do
+          expect(@output_string).to match(/^\s*\#.*account/)
+          expect(@output_string).not_to include("scaffold")
+          expect(@output_string).not_to include(":some_table")
+        end
+      end
+
+      context "when scaffolding a table with no existing config" do
+        before do
+          @database_dump = StringIO.new(<<-SQL)
+          INSERT [dbo].[some_table] ([email], [name], [something], [age]) VALUES ('bob@honk.com','bob', 'some''thin,ge())lse1', 25);
+          SQL
+          @ddo = MyObfuscate.new({
+                                     :some_other_table => {
+                                         :email => {:type => :email, :honk_email_skip => true},
+                                         :name => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+                                         :something => :keep,
+                                         :age => :keep
+                                     }})
+          @ddo.database_type = :sql_server
+          @ddo.globally_kept_columns = %w[age]
+
+          @output = StringIO.new
+          @ddo.scaffold(@database_dump, @output)
+          @output.rewind
+          @output_string = @output.read
+        end
+
+        it "should scaffold all the columns that are not globally kept" do
+          expect(@output_string).to match(/:email\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:name\s+=>\s+:keep.+scaffold/)
+          expect(@output_string).to match(/:something\s+=>\s+:keep.+scaffold/)
+        end
+
+        it "should not scaffold globally kept columns" do
+          expect(@output_string).not_to match(/:age\s+=>\s+:keep.+scaffold/)
+        end
+      end
+
     end
   end
 

@@ -47,6 +47,8 @@ class MyObfuscate
             clean_quotes("#{FFaker::AddressUS.street_address}\\n#{FFaker::AddressUS.city}, #{FFaker::AddressUS.state_abbr} #{FFaker::AddressUS.zip_code}")
           when :street_address
             clean_bad_whitespace(clean_quotes(FFaker::AddressUS.street_address))
+          when :secondary_address
+            clean_bad_whitespace(clean_quotes(FFaker::AddressUS.secondary_address))
           when :city
             clean_quotes(FFaker::AddressUS.city)
           when :state
