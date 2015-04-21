@@ -26,7 +26,7 @@ class MyObfuscate
       end
     end
 
-    def make_insert_statement(table_name, column_names, values)
+    def make_insert_statement(table_name, column_names, values, ignore = nil)
       values_strings = values.collect do |values|
         "(" + values.join(",") + ")"
       end.join(",")
