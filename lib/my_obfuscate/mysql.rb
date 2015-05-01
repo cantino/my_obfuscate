@@ -5,7 +5,7 @@ class MyObfuscate
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
         {
-            :ignore     => regex_match[1],
+            :ignore     => !regex_match[1].nil?,
             :table_name => regex_match[2].to_sym,
             :column_names => regex_match[3].split(/`\s*,\s*`/).map { |col| col.gsub('`', "").to_sym }
         }
@@ -17,7 +17,7 @@ class MyObfuscate
         "(" + values.join(",") + ")"
       end.join(",")
 
-      "INSERT #{ignore}INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES #{values_strings};"
+      "INSERT #{ignore ? 'IGNORE ' : '' }INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES #{values_strings};"
     end
 
     def insert_regex
