@@ -2,7 +2,7 @@ class MyObfuscate
   class Postgres
     include MyObfuscate::CopyStatementParser
 
-    # Copy statements contain the column values tab seperated like so:
+    # Copy statements contain the column values tab separated like so:
     #   blah	blah	blah	blah
     # which we want to turn into:
     #   [['blah','blah','blah','blah']]
@@ -33,7 +33,7 @@ class MyObfuscate
       end
     end
 
-    def make_insert_statement(table_name, column_names, values)
+    def make_insert_statement(table_name, column_names, values, ignore = nil)
       values.join("\t")
     end
 

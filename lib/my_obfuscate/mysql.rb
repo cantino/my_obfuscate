@@ -5,22 +5,23 @@ class MyObfuscate
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
         {
-            :table_name => regex_match[1].to_sym,
-            :column_names => regex_match[2].split(/`\s*,\s*`/).map { |col| col.gsub('`', "").to_sym }
+            :ignore     => !regex_match[1].nil?,
+            :table_name => regex_match[2].to_sym,
+            :column_names => regex_match[3].split(/`\s*,\s*`/).map { |col| col.gsub('`', "").to_sym }
         }
       end
     end
 
-    def make_insert_statement(table_name, column_names, values)
+    def make_insert_statement(table_name, column_names, values, ignore = nil)
       values_strings = values.collect do |values|
         "(" + values.join(",") + ")"
       end.join(",")
 
-      "INSERT INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES #{values_strings};"
+      "INSERT #{ignore ? 'IGNORE ' : '' }INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES #{values_strings};"
     end
 
     def insert_regex
-      /^\s*INSERT INTO `(.*?)` \((.*?)\) VALUES\s*/i
+      /^\s*INSERT\s*(IGNORE )?\s*INTO `(.*?)` \((.*?)\) VALUES\s*/i
     end
 
     def rows_to_be_inserted(line)

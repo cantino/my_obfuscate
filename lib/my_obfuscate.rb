@@ -42,14 +42,14 @@ class MyObfuscate
     database_helper.parse(self, config, input_io, output_io)
   end
 
-  def reassembling_each_insert(line, table_name, columns)
+  def reassembling_each_insert(line, table_name, columns, ignore = nil)
     output = database_helper.rows_to_be_inserted(line).map do |sub_insert|
       result = yield(sub_insert)
       result = result.map do |i|
         database_helper.make_valid_value_string(i)
       end
     end
-    database_helper.make_insert_statement(table_name, columns, output)
+    database_helper.make_insert_statement(table_name, columns, output, ignore)
   end
 
   def check_for_defined_columns_not_in_table(table_name, columns)
@@ -63,8 +63,12 @@ class MyObfuscate
     end
   end
 
+  def missing_column_list(table_name, columns)
+    columns - (config[table_name].keys + (globally_kept_columns || []).map {|i| i.to_sym}).uniq
+  end
+
   def check_for_table_columns_not_in_definition(table_name, columns)
-    missing_columns = columns - (config[table_name].keys + (globally_kept_columns || []).map {|i| i.to_sym}).uniq
+    missing_columns = missing_column_list(table_name, columns)
     unless missing_columns.length == 0
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
@@ -73,7 +77,7 @@ class MyObfuscate
     end
   end
 
-  def obfuscate_bulk_insert_line(line, table_name, columns)
+  def obfuscate_bulk_insert_line(line, table_name, columns, ignore = nil)
     table_config = config[table_name]
     if table_config == :truncate
       ""
@@ -83,7 +87,7 @@ class MyObfuscate
       check_for_defined_columns_not_in_table(table_name, columns)
       check_for_table_columns_not_in_definition(table_name, columns) if fail_on_unspecified_columns?
       # Note: Remember to SQL escape strings in what you pass back.
-      reassembling_each_insert(line, table_name, columns) do |row|
+      reassembling_each_insert(line, table_name, columns, ignore) do |row|
         ConfigApplicator.apply_table_config(row, table_config, columns)
       end
     end
