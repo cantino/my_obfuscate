@@ -47,8 +47,9 @@ class MyObfuscate
       if existing_config
         output_io.puts config_table_open(table_name)
         existing_config.each do |column, definition|
-          break if extra_columns.include?(column)
-          output_io.puts formatted_line(column, definition)
+          unless extra_columns.include?(column)
+            output_io.puts formatted_line(column, definition)
+          end
         end
       end
 
@@ -61,15 +62,17 @@ class MyObfuscate
       output_io.puts config_table_open(table_name) unless existing_config
 
       scaffold = columns_to_scaffold.map do |column|
-        formatted_line(column, ":keep", "# scaffold")
+        formatted_line(column, "keep", "# scaffold")
       end.join("\n").chomp(',')
       output_io.puts scaffold
       output_io.puts config_table_close(table_name)
     end
 
     def formatted_line(column, definition, comment = nil)
+      colon_string = if (definition.to_s[0]=="{" || definition.to_s[0]==":") then definition.to_s else ":#{definition}" end
+
       if column.length < 40
-        "    :#{'%-40.40s' % column}  => #{definition},   #{comment}"
+        "    :#{'%-40.40s' % column}  => #{colon_string},   #{comment}"
       else
         "    :#{column} => #{definition},  #{comment}"
       end

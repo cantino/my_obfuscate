@@ -361,7 +361,12 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should enumerate extra columns" do
-          expect(@output_string).to match(/\#\s*:gender/)
+          expect(@output_string).to match(/\#\s*:gender\s+=>\s+\{:type\s*=>\s*:fixed,\s*:string.*#\s*unreferenced/)
+        end
+
+        it "should pass through existing columns" do
+          expect(@output_string).to match(/:age\s+=>\s+:keep\s*,/)
+          expect(@output_string).to match(/:address2\s+=>\s*:secondary_address/)
         end
       end
 
