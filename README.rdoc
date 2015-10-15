@@ -48,6 +48,7 @@ Make an obfuscator.rb script:
   })
   obfuscator.fail_on_unspecified_columns = true # if you want it to require every column in the table to be in the above definition
   obfuscator.globally_kept_columns = %w[id created_at updated_at] # if you set fail_on_unspecified_columns, you may want this as well
+  # If you'd like to also validate against your schema.rb file to make sure all fields and tables are present, see https://gist.github.com/cantino/5376e73b0ad806dc4da4
   obfuscator.obfuscate(STDIN, STDOUT)
 
 And to get an obfuscated dump:
