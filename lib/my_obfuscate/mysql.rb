@@ -1,6 +1,9 @@
+#encoding: UTF-8
+
 class MyObfuscate
   class Mysql
     include MyObfuscate::InsertStatementParser
+    include MyObfuscate::ConfigScaffoldGenerator
 
     def parse_insert_statement(line)
       if regex_match = insert_regex.match(line)
