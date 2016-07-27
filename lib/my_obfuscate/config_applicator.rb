@@ -80,6 +80,8 @@ class MyObfuscate
             nil
           when :keep
             row[index]
+          when :ffaker
+            clean_bad_whitespace(clean_quotes(definition[:string]))
           else
             $stderr.puts "Keeping a column value by providing an unknown type (#{definition[:type]}) is deprecated.  Use :keep instead."
             row[index]

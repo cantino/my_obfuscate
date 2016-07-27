@@ -136,6 +136,13 @@ describe MyObfuscate::ConfigApplicator do
       expect(new_row[1]).to eq("something_else")
     end
 
+    it "should be able to use a supplied FFaker string" do
+      new_row = MyObfuscate::ConfigApplicator.apply_table_config(["blah", "something_else", "5"], {:a => {:type => :ffaker, :string => FFaker::Lorem.sentence(1)}}, [:a, :b, :c])
+      expect(new_row.length).to eq(3)
+      expect(new_row[0]).not_to eq("blah")
+      expect(new_row[0]).to match(/ /)
+    end
+
     it "should keep the value when given an unknown type, but should display a warning" do
       $stderr = error_output = StringIO.new
       new_row = MyObfuscate::ConfigApplicator.apply_table_config(["blah", "something_else", "5"], {:b => {:type => :unknown_type}}, [:a, :b, :c])
