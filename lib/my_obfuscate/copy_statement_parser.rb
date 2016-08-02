@@ -25,7 +25,7 @@ class MyObfuscate
           current_columns = table_data[:column_names]
 
           if !config[current_table_name]
-            $stderr.puts "Deprecated: #{current_table_name} was not specified in the config.  A future release will cause this to be an error.  Please specify the table definition or set it to :keep."
+            obfuscator.handle_error("#{current_table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
           end
 
           output_io.write line
