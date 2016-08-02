@@ -82,7 +82,11 @@ class MyObfuscate
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
       end.join("\n")
-      raise RuntimeError.new(error_message)
+      if unspecified_columns_behavior == :fail
+        raise RuntimeError.new(error_message)
+      else
+        STDERR.puts(error_message)
+      end
     end
   end
 
@@ -116,6 +120,13 @@ class MyObfuscate
     else
       check_for_defined_columns_not_in_table(table_name, columns)
       check_for_table_columns_not_in_definition(table_name, columns)
+
+      # Prevent errors with extra columns
+      if (unspecified_columns_behavior != :fail) && table_config
+        extra_columns = extra_column_list(table_name, columns)
+        table_config.reject! { |k,v| extra_columns.include?(k) }
+      end
+
       # Note: Remember to SQL escape strings in what you pass back.
       reassembling_each_insert(line, table_name, columns, ignore) do |row|
         ConfigApplicator.apply_table_config(row, table_config, columns)
