@@ -132,20 +132,19 @@ class MyObfuscate
     end
   end
 
-  protected
-    def handle_error(message)
-      message.split("\n").each do |split|
-        self.errors << split
-      end
-
-      self.errors.uniq!
-
-      if unspecified_columns_behavior == :fail
-        raise RuntimeError.new(message)
-      else
-        STDERR.puts(message)
-      end
+  def handle_error(message)
+    message.split("\n").each do |split|
+      self.errors << split
     end
+
+    self.errors.uniq!
+
+    if unspecified_columns_behavior == :fail
+      raise RuntimeError.new(message)
+    else
+      STDERR.puts(message)
+    end
+  end
 end
 
 require 'my_obfuscate/copy_statement_parser'
