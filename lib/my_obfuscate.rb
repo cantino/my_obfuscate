@@ -134,7 +134,11 @@ class MyObfuscate
 
   protected
     def handle_error(message)
-      self.errors << message
+      message.split("\n").each do |split|
+        self.errors << split
+      end
+
+      self.errors.uniq!
 
       if unspecified_columns_behavior == :fail
         raise RuntimeError.new(message)
