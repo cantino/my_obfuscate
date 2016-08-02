@@ -21,6 +21,10 @@ class MyObfuscate
     @scaffolded_tables = {}
   end
 
+  def errors
+    @errors ||= []
+  end
+
   def unspecified_columns_behavior
     @unspecified_columns_behavior || :ignore
   end
@@ -30,7 +34,7 @@ class MyObfuscate
       @unspecified_columns_behavior = new_behavior
     else
       error_message = "#{new_behavior} is not a valid unspecified_columns_behavior." +
-        + "It must be in #{UNSPECIFIED_COLUMNS_BEHAVIORS}"
+        + "It must be in #{UNSPECIFIED_COLUMNS_BEHAVIORS.inspect}"
       raise RuntimeError(error_message)
     end
   end
@@ -82,11 +86,8 @@ class MyObfuscate
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
       end.join("\n")
-      if unspecified_columns_behavior == :fail
-        raise RuntimeError.new(error_message)
-      else
-        STDERR.puts(error_message)
-      end
+
+      handle_error(error_message)
     end
   end
 
@@ -102,11 +103,8 @@ class MyObfuscate
         error_message = missing_columns.map do |missing_column|
           "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
         end.join("\n")
-        if unspecified_columns_behavior == :fail
-          raise RuntimeError.new(error_message)
-        else
-          STDERR.puts(error_message)
-        end
+
+        handle_error(error_message)
       end
     end
   end
@@ -134,6 +132,16 @@ class MyObfuscate
     end
   end
 
+  protected
+    def handle_error(message)
+      self.errors << message
+
+      if unspecified_columns_behavior == :fail
+        raise RuntimeError.new(message)
+      else
+        STDERR.puts(message)
+      end
+    end
 end
 
 require 'my_obfuscate/copy_statement_parser'
