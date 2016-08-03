@@ -116,12 +116,8 @@ class MyObfuscate
     elsif table_config == :keep
       line
     else
-      unless (unspecified_columns_behavior == :fail) || !table_config
-        extra_columns = extra_column_list(table_name, columns)
-
-        # Prevent errors with extra columns when not in fail-fast mode.
-        table_config = table_config.reject { |k,v| extra_columns.include?(k) }
-      end
+      # Prevents errors with extra columns when not in fail-fast mode.
+      table_config = prune_extra_columns(table_name, columns, table_config)
 
       # Note: Remember to SQL escape strings in what you pass back.
       reassembling_each_insert(line, table_name, columns, ignore) do |row|
@@ -130,10 +126,15 @@ class MyObfuscate
     end
   end
 
-  def handle_column_error(message)
-    message.split("\n").each do |split|
-      self.errors << split
+  def prune_extra_columns(table_name, columns, table_config)
+    extra_columns = extra_column_list(table_name, columns)
+
+    if table_config && !extra_columns.empty?
+      table_config.reject { |k,v| extra_columns.include?(k) }
+    else
+      table_config
     end
+  end
 
   def handle_column_error(*messages)
     messages.split("\n").each do |split|
