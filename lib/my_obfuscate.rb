@@ -82,7 +82,8 @@ class MyObfuscate
 
   def check_for_defined_columns_not_in_table(table_name, columns)
     missing_columns = extra_column_list(table_name, columns)
-    unless missing_columns.length == 0
+
+    unless unspecified_columns_behavior == :ignore || missing_columns.empty?
       error_message = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
       end.join("\n")
@@ -97,15 +98,14 @@ class MyObfuscate
   end
 
   def check_for_table_columns_not_in_definition(table_name, columns)
-    unless unspecified_columns_behavior == :ignore
-      missing_columns = missing_column_list(table_name, columns)
-      unless missing_columns.length == 0
-        error_message = missing_columns.map do |missing_column|
-          "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
-        end.join("\n")
+    missing_columns = missing_column_list(table_name, columns)
 
-        handle_error(error_message)
-      end
+    unless unspecified_columns_behavior == :ignore || missing_columns.empty?
+      error_message = missing_columns.map do |missing_column|
+        "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
+      end.join("\n")
+
+      handle_error(error_message)
     end
   end
 
@@ -116,13 +116,11 @@ class MyObfuscate
     elsif table_config == :keep
       line
     else
-      check_for_defined_columns_not_in_table(table_name, columns)
-      check_for_table_columns_not_in_definition(table_name, columns)
-
-      # Prevent errors with extra columns
-      if (unspecified_columns_behavior != :fail) && table_config
+      unless (unspecified_columns_behavior == :fail) || !table_config
         extra_columns = extra_column_list(table_name, columns)
-        table_config.reject! { |k,v| extra_columns.include?(k) }
+
+        # Prevent errors with extra columns when not in fail-fast mode.
+        table_config = table_config.reject { |k,v| extra_columns.include?(k) }
       end
 
       # Note: Remember to SQL escape strings in what you pass back.

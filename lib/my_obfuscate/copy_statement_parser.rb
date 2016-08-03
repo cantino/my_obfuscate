@@ -28,6 +28,9 @@ class MyObfuscate
             obfuscator.handle_error("#{current_table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
           end
 
+          check_for_defined_columns_not_in_table(current_table_name, current_columns)
+          check_for_table_columns_not_in_definition(current_table_name, current_columns)
+
           output_io.write line
         elsif line.match /\S*\.\n/
           inside_copy_statement = false
