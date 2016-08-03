@@ -53,7 +53,7 @@ class MyObfuscate
     end
 
     def strip_quotes(value)
-      value.sub(/"(.*)"/, '\1')
+      value.sub(/\A"(.*)"\Z/, '\1')
     end
   end
 end
