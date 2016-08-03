@@ -12,7 +12,7 @@ class MyObfuscate
   NUMBER_CHARS = "1234567890"
   USERNAME_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_" + NUMBER_CHARS
   SENSIBLE_CHARS = USERNAME_CHARS + '+-=[{]}/?|!@#$%^&*()`~'
-  UNSPECIFIED_COLUMNS_BEHAVIORS = [:fail, :warn, :ignore]
+  COLUMN_MISMATCH_BEHAVIORS = [:fail, :warn, :ignore]
 
   # Make a new MyObfuscate object.  Pass in a configuration structure to define how the obfuscation should be
   # performed.  See the README.rdoc file for more information.
@@ -25,16 +25,18 @@ class MyObfuscate
     @errors ||= []
   end
 
-  def unspecified_columns_behavior
-    @unspecified_columns_behavior ||= :fail
+  def column_mismatch_behavior
+    @column_mismatch_behavior ||= :fail
   end
 
   def unspecified_columns_behavior=(new_behavior)
-    if UNSPECIFIED_COLUMNS_BEHAVIORS.include?(new_behavior)
-      @unspecified_columns_behavior = new_behavior
+    if COLUMN_MISMATCH_BEHAVIORS.include?(new_behavior)
+      @column_mismatch_behavior = new_behavior
     else
-      error_message = "#{new_behavior} is not a valid unspecified_columns_behavior." +
-        + "It must be in #{UNSPECIFIED_COLUMNS_BEHAVIORS.inspect}"
+      error_message =
+        "#{new_behavior} is not a valid unspecified_columns_behavior. " \
+        "Valid options: #{COLUMN_MISMATCH_BEHAVIORS}"
+
       raise RuntimeError(error_message)
     end
   end
@@ -88,7 +90,7 @@ class MyObfuscate
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
       end
 
-      handle_column_error(*error_messages)
+      handle_column_mismatch(*error_messages)
     end
   end
 
@@ -105,7 +107,7 @@ class MyObfuscate
         "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
       end
 
-      handle_column_error(*error_messages)
+      handle_column_mismatch(*error_messages)
     end
   end
 
@@ -136,16 +138,16 @@ class MyObfuscate
     end
   end
 
-  def handle_column_error(*messages)
-    messages.split("\n").each do |split|
+  def handle_column_mismatch(*error_messages)
+    error_messages.split("\n").each do |split|
       self.errors << split
     end
 
-    case unspecified_columns_behavior
+    case column_mismatch_behavior
     when :fail
-      raise RuntimeError.new(messages.join("\n"))
+      raise RuntimeError.new(error_messages.join("\n"))
     when :warn
-      STDERR.puts(messages)
+      STDERR.puts(error_messages)
     else
       # Ignore
     end

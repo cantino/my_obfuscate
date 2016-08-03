@@ -25,7 +25,7 @@ class MyObfuscate
           current_columns = table_data[:column_names]
 
           if !config[current_table_name]
-            obfuscator.handle_column_error("#{current_table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
+            obfuscator.handle_column_mismatch("#{current_table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
           end
 
           obfuscator.check_for_defined_columns_not_in_table(
