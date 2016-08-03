@@ -26,7 +26,7 @@ class MyObfuscate
   end
 
   def unspecified_columns_behavior
-    @unspecified_columns_behavior || :fail
+    @unspecified_columns_behavior ||= :fail
   end
 
   def unspecified_columns_behavior=(new_behavior)
