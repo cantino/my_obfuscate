@@ -138,8 +138,8 @@ class MyObfuscate
   end
 
   def handle_column_mismatch(*error_messages)
-    error_messages.split("\n").each do |split|
-      self.errors << split
+    error_messages.each do |message|
+      self.errors << message
     end
 
     case column_mismatch_behavior
