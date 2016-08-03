@@ -84,11 +84,11 @@ class MyObfuscate
     missing_columns = extra_column_list(table_name, columns)
 
     unless missing_columns.empty?
-      error_message = missing_columns.map do |missing_column|
+      error_messages = missing_columns.map do |missing_column|
         "Column '#{missing_column}' could not be found in table '#{table_name}', please fix your obfuscator config."
-      end.join("\n")
+      end
 
-      handle_column_error(error_message)
+      handle_column_error(*error_messages)
     end
   end
 
@@ -101,11 +101,11 @@ class MyObfuscate
     missing_columns = missing_column_list(table_name, columns)
 
     unless missing_columns.empty?
-      error_message = missing_columns.map do |missing_column|
+      error_messages = missing_columns.map do |missing_column|
         "Column '#{missing_column}' defined in table '#{table_name}', but not found in table definition, please fix your obfuscator config."
-      end.join("\n")
+      end
 
-      handle_column_error(error_message)
+      handle_column_error(*error_messages)
     end
   end
 
@@ -135,13 +135,16 @@ class MyObfuscate
       self.errors << split
     end
 
-    self.errors.uniq!
+  def handle_column_error(*messages)
+    messages.split("\n").each do |split|
+      self.errors << split
+    end
 
     case unspecified_columns_behavior
     when :fail
-      raise RuntimeError.new(message)
+      raise RuntimeError.new(messages.join("\n"))
     when :warn
-      STDERR.puts(message)
+      STDERR.puts(messages)
     else
       # Ignore
     end
