@@ -13,7 +13,7 @@ class MyObfuscate
 
             output_io.puts obfuscator.obfuscate_bulk_insert_line(line, table_name, columns, ignore)
           else
-            obfuscator.handle_error("#{table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
+            obfuscator.handle_column_error("#{table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
             output_io.write line
           end
         else
