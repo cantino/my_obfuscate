@@ -29,7 +29,7 @@ class MyObfuscate
           end
 
           output_io.write line
-        elsif line.match /\S*\.\n/
+        elsif line.match /^\\\.$/
           inside_copy_statement = false
 
           output_io.write line
