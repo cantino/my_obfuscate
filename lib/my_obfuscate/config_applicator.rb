@@ -16,7 +16,6 @@ class MyObfuscate
           next if unless_check.call(row_hash)
         end
 
-
         if definition.has_key?(:if)
           if_check = make_conditional_method(definition[:if], index, row)
 
@@ -36,7 +35,7 @@ class MyObfuscate
           when :lorem
             clean_bad_whitespace(clean_quotes(FFaker::Lorem.sentences(definition[:number] || 1).join(".  ")))
           when :like_english
-            clean_quotes random_english_sentences(definition[:number] || 1)
+            clean_quotes random_english_sentences(definition[:number] || 1, dictionary: (definition[:dictionary] || nil))
           when :name
             clean_quotes(FFaker::Name.name)
           when :first_name
@@ -115,21 +114,28 @@ class MyObfuscate
       out
     end
 
-    def self.random_english_sentences(num)
-      @@walker_method ||= begin
+    def self.random_english_sentences(num, dictionary: nil)
+      dictionary_path = (dictionary || default_dictionary_path)
+
+      @@walker_method ||= {}
+      @@walker_method[dictionary_path] ||= begin
         words, counts = [], []
-        File.read(File.expand_path(File.join(File.dirname(__FILE__), 'data', 'en_50K.txt'))).each_line do |line|
+
+        File.read(dictionary_path).each_line do |line|
           word, count = line.split(/\s+/)
           words << word
           counts << count.to_i
         end
+
         WalkerMethod.new(words, counts)
       end
+
+      word_list = @@walker_method[dictionary_path]
 
       sentences = []
       num.times do
         words = []
-        (3 + rand * 5).to_i.times { words << @@walker_method.random }
+        (3 + rand * 5).to_i.times { words << word_list.random }
         sentences << words.join(" ") + "."
         sentences.last[0] = sentences.last[0].upcase
       end
@@ -144,5 +150,8 @@ class MyObfuscate
       value.gsub(/[\n\t\r]/, '')
     end
 
+    def self.default_dictionary_path
+      File.expand_path(File.join(File.dirname(__FILE__), 'data', 'en_50K.txt'))
+    end
   end
 end
