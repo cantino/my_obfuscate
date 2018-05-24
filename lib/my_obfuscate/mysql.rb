@@ -1,4 +1,5 @@
 #encoding: UTF-8
+require 'stringio'
 require 'strscan'
 
 class MyObfuscate
@@ -23,12 +24,28 @@ class MyObfuscate
       end
     end
 
-    def make_insert_statement(table_name, column_names, values, ignore = nil)
-      values_strings = values.collect do |values|
-        "(" + values.join(",") + ")"
-      end.join(",")
+    def make_insert_statement(table_name, column_names, rows, ignore = nil)
+      buffer = StringIO.new
+      buffer.write "INSERT #{ignore ? 'IGNORE ' : '' }INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES "
+      write_rows(buffer, rows)
+      buffer.write ";"
+      buffer.string
+    end
 
-      "INSERT #{ignore ? 'IGNORE ' : '' }INTO `#{table_name}` (`#{column_names.join('`, `')}`) VALUES #{values_strings};"
+    def write_rows(buffer, rows)
+      rows.each_with_index do |row_values, i|
+        buffer.write("(")
+        write_row_values(buffer, row_values)
+        buffer.write(")")
+        buffer.write(",") if i < rows.length - 1
+      end
+    end
+
+    def write_row_values(buffer, row_values)
+      row_values.each_with_index do |value, j|
+        buffer.write value
+        buffer.write(",") if j < row_values.length - 1
+      end
     end
 
     def insert_regex
