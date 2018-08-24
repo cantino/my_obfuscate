@@ -46,6 +46,11 @@ COPY another_table (a, b, c, d) FROM stdin;
 COPY some_table_to_keep (a, b) FROM stdin;
 5	6
 \.
+
+COPY some_table_ending_with_dot (a, b) FROM stdin;
+some_data_obfuscated    some_data_obfuscate
+some_data_unobfuscated	somedata_unobfuscated.
+\.
         SQL
       end
 
@@ -60,7 +65,11 @@ COPY some_table_to_keep (a, b) FROM stdin;
             :id => {:type => :integer, :between => 2..9, :unless => :nil}
           },
           :another_table => :truncate,
-          :some_table_to_keep => :keep
+          :some_table_to_keep => :keep,
+          :some_table_ending_with_dot => {
+             :a => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+             :b => {:type => :string, :length => 8, :chars => MyObfuscate::USERNAME_CHARS},
+          }
         }).tap do |obfuscator|
           obfuscator.database_type = :postgres
         end
@@ -96,6 +105,10 @@ COPY some_table_to_keep (a, b) FROM stdin;
         scaffolder.scaffold(dump, output)
         output.rewind
         output.read
+      end
+
+      it "is able to obfuscate data with a dot in the end" do
+        expect(output_string).not_to include("some_data_unobfuscated")
       end
 
       it "is able to obfuscate single column tables" do
