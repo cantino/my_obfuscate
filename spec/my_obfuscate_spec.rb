@@ -132,6 +132,29 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
       end
 
+      context "when dump contains functions" do
+        let(:dump) do
+          StringIO.new(<<-SQL)
+          CREATE FUNCTION foo()
+          LANGUAGE plpgsql
+          AS $_$
+            INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);
+            COPY some_table (id, email, name, something, age) FROM stdin;
+            1	hello	monkey	moose	14
+            \.
+          $_$
+          SQL
+        end
+
+        it "doesn't raise an error if it insert statements" do
+          expect { output_string }.to_not raise_error RuntimeError
+        end
+
+        it "will not obfuscate data within a function" do
+          expect(output_string).to match(/1\thello\tmonkey\tmoose\t14\n/)
+        end
+      end
+
       it "when there is no existing config, should scaffold all the columns that are not globally kept" do
         expect(scaffold_output_string).to match(/:email\s+=>\s+:keep.+scaffold/)
         expect(scaffold_output_string).to match(/:name\s+=>\s+:keep.+scaffold/)
