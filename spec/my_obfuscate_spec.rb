@@ -148,6 +148,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
 
         it "doesn't raise an error if it insert statements" do
           expect { output_string }.to_not raise_error RuntimeError
+          expect(output_string).to include "INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);\n"
         end
 
         it "will not obfuscate data within a function" do
