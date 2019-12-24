@@ -29,12 +29,13 @@ class MyObfuscate
           end
 
           output_io.write line
-        elsif line.match /\S*\.\n/
+        elsif line.match /^\\\.$/
           inside_copy_statement = false
 
           output_io.write line
         elsif inside_copy_statement
-          output_io.puts obfuscator.obfuscate_bulk_insert_line(line, current_table_name, current_columns)
+          obfuscated_line = obfuscator.obfuscate_bulk_insert_line(line, current_table_name, current_columns)
+          output_io.puts obfuscated_line unless obfuscated_line.empty?
         else
           output_io.write line
         end
