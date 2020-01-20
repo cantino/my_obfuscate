@@ -155,6 +155,79 @@ describe MyObfuscate::ConfigApplicator do
       expect(new_row[1]).to match(/\w\.(?!\Z)/)
     end
 
+    context 'when asked to generate English-like text' do
+      after do
+        MyObfuscate::ConfigApplicator.class_variable_set(:@@walker_method, nil)
+      end
+
+      context 'with the default dictionary' do
+        before do
+          expect(File).to receive(:read).once do |filename|
+            expect(filename).not_to be_nil
+
+            "hello 2"
+          end
+        end
+
+        let(:new_row) do
+          MyObfuscate::ConfigApplicator.apply_table_config(
+            ['blah', 'something_else', '5'],
+            {
+              :a => :keep,
+              :b => {
+                :type   => :like_english,
+                :number => 2
+              }
+            },
+            [:a, :b, :c])
+        end
+
+        it 'should be able to generate and substitute English-like text' do
+          expect(new_row.length).to eq(3)
+
+          expect(new_row[0]).to eq("blah")
+
+          expect(new_row[1]).not_to eq('something_else')
+          expect(new_row[1]).to match(/^(Hello( hello)+\.\s*){2}$/)
+
+          expect(new_row[2]).to eq('5')
+        end
+      end
+
+      context 'with a custom dictionary' do
+        before do
+          expect(File)
+            .to receive(:read).with('custom.txt').once
+            .and_return("custom 2")
+        end
+
+        let(:new_row) do
+          MyObfuscate::ConfigApplicator.apply_table_config(
+            ['blah', 'something_else', '5'],
+            {
+              :a => :keep,
+              :b => {
+                :type   => :like_english,
+                :number => 2,
+                :dictionary => 'custom.txt'
+              }
+            },
+            [:a, :b, :c])
+        end
+
+        it 'should be able to use the dictionary to generate and substitute English-like text' do
+          expect(new_row.length).to eq(3)
+
+          expect(new_row[0]).to eq("blah")
+
+          expect(new_row[1]).not_to eq('something_else')
+          expect(new_row[1]).to match(/^(Custom( custom)+\.\s*){2}$/)
+
+          expect(new_row[2]).to eq('5')
+        end
+      end
+    end
+
     it "should be able to generate an :company" do
       new_row = MyObfuscate::ConfigApplicator.apply_table_config(["Smith and Sons", "something_else", "5"], {:a => :company}, [:a, :b, :c])
       expect(new_row.length).to eq(3)
@@ -255,21 +328,57 @@ describe MyObfuscate::ConfigApplicator do
   end
 
   describe ".random_english_sentences" do
-    before do
-      expect(File).to receive(:read).once.and_return("hello 2")
-    end
-
     after do
       MyObfuscate::ConfigApplicator.class_variable_set(:@@walker_method, nil)
     end
 
-    it "should only load file data once" do
-      MyObfuscate::ConfigApplicator.random_english_sentences(1)
-      MyObfuscate::ConfigApplicator.random_english_sentences(1)
+    context 'when using the default dictionary' do
+      before do
+        expect(File)
+          .to receive(:read).once
+          .and_return("hello 2")
+      end
+
+      it "should only load file data once" do
+        MyObfuscate::ConfigApplicator.random_english_sentences(1)
+
+        # Second call should not call File.read; if it does, the `before`
+        # expectation will fail
+        MyObfuscate::ConfigApplicator.random_english_sentences(1)
+      end
+
+      it "should make random sentences" do
+        expect(MyObfuscate::ConfigApplicator.random_english_sentences(2))
+          .to match(/^(Hello( hello)+\.\s*){2}$/)
+      end
     end
 
-    it "should make random sentences" do
-      expect(MyObfuscate::ConfigApplicator.random_english_sentences(2)).to match(/^(Hello( hello)+\.\s*){2}$/)
+    context 'when using a custom dictionary' do
+      before do
+        expect(File)
+          .to receive(:read).once.with('custom_file.txt')
+          .and_return("custom 2")
+      end
+
+      it "should only load file data once" do
+        MyObfuscate::ConfigApplicator.random_english_sentences(
+          1,
+          dictionary: 'custom_file.txt')
+
+        # Second call should not call File.read; if it does, the `before`
+        # expectation will fail
+        MyObfuscate::ConfigApplicator.random_english_sentences(
+          1,
+          dictionary: 'custom_file.txt')
+      end
+
+      it "should make random sentences using the custom words" do
+        sentences =
+          MyObfuscate::ConfigApplicator.random_english_sentences(
+            2, dictionary: 'custom_file.txt')
+
+        expect(sentences).to match(/^(Custom( custom)+\.\s*){2}$/)
+      end
     end
   end
 
