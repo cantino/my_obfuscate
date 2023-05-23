@@ -30,44 +30,41 @@ class MyObfuscate
         row[index.to_i] = case definition[:type]
           when :email
             md5 = Digest::MD5.hexdigest(rand.to_s)[0...5]
-            clean_quotes("#{FFaker::Internet.email}.#{md5}.example.com")
+            clean_quotes("#{Faker::Internet.email}.#{md5}.example.com")
           when :string
             random_string(definition[:length] || 30, definition[:chars] || SENSIBLE_CHARS)
           when :lorem
-            clean_bad_whitespace(clean_quotes(FFaker::Lorem.sentences(definition[:number] || 1).join(".  ")))
+            clean_bad_whitespace(clean_quotes(Faker::Lorem.sentences(number: definition[:number] || 1).join(" ")))
           when :like_english
             clean_quotes random_english_sentences(definition[:number] || 1)
           when :name
-            clean_quotes(FFaker::Name.name)
+            clean_quotes(Faker::Name.name)
           when :first_name
-            clean_quotes(FFaker::Name.first_name)
+            clean_quotes(Faker::Name.first_name)
           when :last_name
-            clean_quotes(FFaker::Name.last_name)
+            clean_quotes(Faker::Name.last_name)
           when :address
-            clean_quotes("#{FFaker::AddressUS.street_address}\\n#{FFaker::AddressUS.city}, #{FFaker::AddressUS.state_abbr} #{FFaker::AddressUS.zip_code}")
+            clean_quotes(Faker::Address.full_address)
           when :street_address
-            clean_bad_whitespace(clean_quotes(FFaker::AddressUS.street_address))
+            clean_bad_whitespace(clean_quotes(Faker::Address.street_address))
           when :secondary_address
-            clean_bad_whitespace(clean_quotes(FFaker::AddressUS.secondary_address))
+            clean_bad_whitespace(clean_quotes(Faker::Address.secondary_address))
           when :city
-            clean_quotes(FFaker::AddressUS.city)
+            clean_quotes(Faker::Address.city)
           when :state
-            clean_quotes FFaker::AddressUS.state_abbr
+            clean_quotes Faker::Address.state_abbr
           when :zip_code
-            FFaker::AddressUS.zip_code
+            Faker::Address.zip_code
           when :phone
-            clean_quotes FFaker::PhoneNumber.phone_number
+            clean_quotes Faker::PhoneNumber.phone_number
           when :company
-            clean_bad_whitespace(clean_quotes(FFaker::Company.name))
+            clean_bad_whitespace(clean_quotes(Faker::Company.name))
           when :ipv4
-            FFaker::Internet.ip_v4_address
+            Faker::Internet.ip_v4_address
           when :ipv6
-            # Inlined from FFaker because ffaker doesn't have ipv6.
-            @@ip_v6_space ||= (0..65535).to_a
-            container = (1..8).map{ |_| @@ip_v6_space.sample }
-            container.map{ |n| n.to_s(16) }.join(':')
+            Faker::Internet.ip_v6_address
           when :url
-            clean_bad_whitespace(FFaker::Internet.http_url)
+            clean_bad_whitespace(Faker::Internet.url)
           when :integer
             random_integer(definition[:between] || (0..1000)).to_s
           when :fixed
