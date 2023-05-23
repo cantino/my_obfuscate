@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'uri'
 
 describe MyObfuscate::ConfigApplicator do
 
@@ -7,7 +8,7 @@ describe MyObfuscate::ConfigApplicator do
       100.times do
         new_row = MyObfuscate::ConfigApplicator.apply_table_config(["blah", "something_else"], {:a => {:type => :email}}, [:a, :b])
         expect(new_row.length).to eq(2)
-        expect(new_row.first).to match(/^[\w\.]+\@(\w+\.){2,3}[a-f0-9]{5}\.example\.com$/)
+        expect(new_row.first).to match(URI::MailTo::EMAIL_REGEXP)
       end
     end
 
@@ -232,11 +233,11 @@ describe MyObfuscate::ConfigApplicator do
 
     describe "when faker generates values with quotes in them" do
       before do
-        allow(FFaker::Address).to receive(:city).and_return("O'ReillyTown")
-        allow(FFaker::Name).to receive(:name).and_return("Foo O'Reilly")
-        allow(FFaker::Name).to receive(:first_name).and_return("O'Foo")
-        allow(FFaker::Name).to receive(:last_name).and_return("O'Reilly")
-        allow(FFaker::Lorem).to receive(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
+        allow(Faker::Address).to receive(:city).and_return("O'ReillyTown")
+        allow(Faker::Name).to receive(:name).and_return("Foo O'Reilly")
+        allow(Faker::Name).to receive(:first_name).and_return("O'Foo")
+        allow(Faker::Name).to receive(:last_name).and_return("O'Reilly")
+        allow(Faker::Lorem).to receive(:sentences).with(any_args).and_return(["Foo bar O'Thingy"])
       end
 
       it "should remove single quotes from the value" do

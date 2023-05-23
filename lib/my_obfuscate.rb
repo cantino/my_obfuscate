@@ -1,6 +1,6 @@
 require 'jcode' if RUBY_VERSION < '1.9'
 require 'digest/md5'
-require 'ffaker'
+require 'faker'
 require 'walker_method'
 
 # Class for obfuscating MySQL dumps. This can parse mysqldump outputs when using the -c option, which includes
