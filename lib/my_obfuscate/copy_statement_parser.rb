@@ -14,9 +14,24 @@ class MyObfuscate
     def parse(obfuscator, config, input_io, output_io)
       current_table_name, current_columns = ""
       inside_copy_statement = false
+      inside_function = false
+      function_body_symbol = nil
 
       input_io.each do |line|
-        if parse_insert_statement(line)
+        if parse_function_statement(line)
+          inside_function = true
+        end
+
+        if inside_function
+          if start_func_body = /AS (\$.*\$)$/.match(line)
+            function_body_symbol = start_func_body[1]
+          elsif function_body_symbol && /#{Regexp.escape function_body_symbol};$/.match(line) && line.include?(function_body_symbol)
+            inside_function = false
+            function_body_symbol = nil
+          end
+
+          output_io.write line
+        elsif parse_insert_statement(line)
           raise RuntimeError.new("Cannot obfuscate Postgres dumps containing INSERT statements. Please use COPY statments.")
         elsif table_data = parse_copy_statement(line)
           inside_copy_statement = true

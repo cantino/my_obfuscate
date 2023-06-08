@@ -50,5 +50,9 @@ class MyObfuscate
       /^\s*INSERT INTO/i.match(line)
     end
 
+    def parse_function_statement(line)
+      /^\s*CREATE FUNCTION/i.match(line)
+    end
+
   end
 end
