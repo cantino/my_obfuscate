@@ -28,8 +28,10 @@ class MyObfuscate
     def parse_copy_statement(line)
       if regex_match = /^\s*COPY (.*?) \((.*?)\) FROM\s*/i.match(line)
         {
-            :table_name => regex_match[1].to_sym,
-            :column_names => regex_match[2].split(/\s*,\s*/).map(&:to_sym)
+            :table_name   => regex_match[1].to_sym,
+            :column_names => regex_match[2].split(/\s*,\s*/).map do |column|
+              strip_quotes(column).to_sym
+            end
         }
       end
     end
@@ -50,5 +52,8 @@ class MyObfuscate
       /^\s*INSERT INTO/i.match(line)
     end
 
+    def strip_quotes(value)
+      value.sub(/\A"(.*)"\Z/, '\1')
+    end
   end
 end
