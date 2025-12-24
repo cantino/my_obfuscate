@@ -374,7 +374,7 @@ COPY some_table_to_keep (a, b) FROM stdin;
         end
 
         it "should enumerate extra columns" do
-          expect(@output_string).to match(/\#\s*:gender\s+=>\s+\{:type\s*=>\s*:fixed,\s*:string.*#\s*unreferenced/)
+          expect(@output_string).to match(/\#\s*:gender\s+=>\s+\{type:\s+:fixed,\s*string:.*#\s*unreferenced/)
         end
 
         it "should pass through existing columns" do

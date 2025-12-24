@@ -105,7 +105,7 @@ class MyObfuscate
     end
 
     def self.random_string(length_or_range, chars)
-      length_or_range = (length_or_range..length_or_range) if length_or_range.is_a?(Fixnum)
+      length_or_range = (length_or_range..length_or_range) if length_or_range.is_a?(Integer)
       times = random_integer(length_or_range)
       out = ""
       times.times { out << chars[rand * chars.length] }
