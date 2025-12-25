@@ -25,8 +25,14 @@ class MyObfuscate
           current_columns = table_data[:column_names]
 
           if !config[current_table_name]
-            $stderr.puts "Deprecated: #{current_table_name} was not specified in the config.  A future release will cause this to be an error.  Please specify the table definition or set it to :keep."
+            obfuscator.handle_column_mismatch("#{current_table_name} was not specified in the config. Please specify the table definition or set it to :keep.")
           end
+
+          obfuscator.check_for_defined_columns_not_in_table(
+            current_table_name, current_columns)
+
+          obfuscator.check_for_table_columns_not_in_definition(
+            current_table_name, current_columns)
 
           output_io.write line
         elsif line.match /^\\\.$/
