@@ -123,7 +123,8 @@ COPY some_table_to_keep (a, b) FROM stdin;
       context "when dump contains INSERT statement" do
         let(:dump) do
           StringIO.new(<<-SQL)
-          INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);
+# Without initial spaces
+INSERT INTO some_table (email, name, something, age) VALUES ('','', '', 25);
           SQL
         end
 
