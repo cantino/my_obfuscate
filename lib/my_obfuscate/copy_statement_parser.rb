@@ -27,6 +27,10 @@ class MyObfuscate
           if !config[current_table_name]
             $stderr.puts "Deprecated: #{current_table_name} was not specified in the config.  A future release will cause this to be an error.  Please specify the table definition or set it to :keep."
           end
+          
+          if config[current_table_name].is_a?(Hash)
+            obfuscator.check_for_table_columns_not_in_definition(current_table_name, current_columns)
+          end
 
           output_io.write line
         elsif line.match /^\\\.$/
